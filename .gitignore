@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 训练产物
+output/
+outputs/
+ckpt/
+checkpoints/
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.idx
+
+# Profiling 产物
+prof/
+profiler_output/
+*_ascend_pt/
+kernel_meta/
+
+# 日志
+logs/
+*.log
+plog/
+
+# 数据集缓存
+dataset/
+data/
+.cache/
+
+# 诊断脚本产物
+diag_*/
+diag_*.tar.gz
+
+# IDE
+.idea/
+.vscode/
+.DS_Store

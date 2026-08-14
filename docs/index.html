@@ -1,0 +1,3137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>昇腾 910 训练手册</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23c7000b'/%3E%3Ctext x='50' y='68' font-size='44' font-family='monospace' font-weight='bold' fill='white' text-anchor='middle'%3E910%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<style>
+:root{
+  --bg:#f7f6f5; --surface:#ffffff; --ink:#201d1c; --muted:#6b6461;
+  --accent:#c7000b; --accent-ink:#ffffff; --accent-soft:rgba(199,0,11,.07);
+  --line:#e6e2df; --chip:#efecea; --code-bg:#211e1d; --code-ink:#e8e2dc;
+  --callout:#faf4f0; --ok:#1d7a4f; --warn:#a05a00; --tip:#215f9a;
+  --shadow:0 1px 3px rgba(32,29,28,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161413; --surface:#1e1b1a; --ink:#e9e4df; --muted:#a39a94;
+    --accent:#ff6257; --accent-ink:#1a0705; --accent-soft:rgba(255,98,87,.10);
+    --line:#2e2a28; --chip:#2a2625; --code-bg:#121010; --code-ink:#ddd6cf;
+    --callout:#232019; --ok:#5cc491; --warn:#e0a458; --tip:#7ab3e8;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161413; --surface:#1e1b1a; --ink:#e9e4df; --muted:#a39a94;
+  --accent:#ff6257; --accent-ink:#1a0705; --accent-soft:rgba(255,98,87,.10);
+  --line:#2e2a28; --chip:#2a2625; --code-bg:#121010; --code-ink:#ddd6cf;
+  --callout:#232019; --ok:#5cc491; --warn:#e0a458; --tip:#7ab3e8;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:24px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei","Segoe UI",sans-serif;
+  font-size:15.5px; line-height:1.85;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+code,pre,.mono,.nav-num,.ch-num,.eyebrow{
+  font-family:"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+/* ---------- 布局 ---------- */
+.layout{display:flex; min-height:100vh}
+.sidebar{
+  width:264px; flex:0 0 264px; background:var(--surface);
+  border-right:1px solid var(--line);
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  display:flex; flex-direction:column; padding:20px 14px 14px;
+}
+.main{flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; padding:0 28px}
+.chapter{width:100%; max-width:800px; padding:44px 0 24px; border-bottom:1px solid var(--line)}
+.chapter:last-of-type{border-bottom:none}
+.foot{width:100%; max-width:800px; padding:28px 0 48px; color:var(--muted); font-size:.82rem; border-top:1px solid var(--line)}
+
+/* ---------- 侧栏 ---------- */
+.brand{display:flex; gap:10px; align-items:center; color:var(--ink); padding:2px 8px 16px}
+.brand:hover{text-decoration:none}
+.brand-mark{
+  background:var(--accent); color:var(--accent-ink); font-weight:700;
+  font-family:Menlo,Consolas,monospace; font-size:.8rem;
+  border-radius:8px; padding:8px 7px; letter-spacing:.03em;
+}
+.brand-name{font-weight:700; font-size:.95rem; line-height:1.3}
+.brand-name small{display:block; font-weight:400; color:var(--muted); font-size:.72rem; letter-spacing:.05em}
+.nav{flex:1}
+.nav ul{list-style:none; margin:0; padding:0}
+.nav-part{
+  font-size:.68rem; color:var(--muted); letter-spacing:.18em; margin:16px 8px 4px;
+}
+.nav-link{
+  display:flex; gap:9px; align-items:baseline; color:var(--ink);
+  padding:5px 8px; border-radius:6px; font-size:.88rem;
+}
+.nav-link:hover{background:var(--chip); text-decoration:none}
+.nav-num{color:var(--muted); font-size:.72rem; min-width:1.6em}
+.nav-item.active > .nav-link{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.nav-item.active > .nav-link .nav-num{color:var(--accent)}
+.subs{display:none; margin:2px 0 6px!important; border-left:1px solid var(--line); margin-left:17px!important}
+.nav-item.active .subs{display:block}
+.subs a{display:block; color:var(--muted); font-size:.78rem; padding:2.5px 10px; line-height:1.45}
+.subs a:hover{color:var(--accent); text-decoration:none}
+.side-foot{
+  border-top:1px solid var(--line); margin-top:12px; padding:12px 8px 0;
+  display:flex; justify-content:space-between; align-items:center; font-size:.8rem;
+}
+.side-foot button{
+  background:none; border:1px solid var(--line); color:var(--muted);
+  border-radius:6px; padding:3px 9px; cursor:pointer; font-size:.78rem;
+}
+.side-foot button:hover{color:var(--ink); border-color:var(--muted)}
+
+/* ---------- hero ---------- */
+.hero{padding:18px 0 6px}
+.eyebrow{
+  color:var(--accent); font-size:.7rem; letter-spacing:.16em; font-weight:600;
+}
+.hero-title{
+  font-size:2.15rem; line-height:1.32; margin:.5em 0 .4em; letter-spacing:.01em;
+  text-wrap:balance;
+}
+.hero-sub{color:var(--muted); max-width:36em; margin:0 0 1.2em}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+.chip{
+  background:var(--chip); border-radius:999px; padding:3px 13px;
+  font-size:.78rem; color:var(--muted);
+}
+.chip-link{color:var(--accent); background:var(--accent-soft)}
+.chip-link:hover{text-decoration:none; filter:brightness(.94)}
+
+/* ---------- 章头与标题 ---------- */
+.ch-head{display:flex; gap:18px; align-items:flex-end; margin-bottom:10px}
+.ch-num{
+  font-size:3rem; font-weight:700; color:var(--accent); opacity:.28;
+  line-height:.9; letter-spacing:-.02em; user-select:none;
+}
+.ch-title h1{font-size:1.72rem; margin:.1em 0 0; line-height:1.35; text-wrap:balance}
+h2{
+  font-size:1.32rem; margin:2.2em 0 .7em; padding-bottom:.35em;
+  border-bottom:1px solid var(--line); line-height:1.4;
+}
+h3{font-size:1.06rem; margin:1.8em 0 .5em}
+.hlink{margin-left:.45em; font-size:.8em; opacity:0; color:var(--muted)}
+h2:hover .hlink,h3:hover .hlink{opacity:.8}
+p{margin:.75em 0}
+strong{font-weight:650}
+ul,ol{padding-left:1.6em; margin:.6em 0}
+li{margin:.28em 0}
+hr{border:none; border-top:1px solid var(--line); margin:2em 0}
+
+/* ---------- 代码 ---------- */
+code{
+  background:var(--chip); border-radius:4px; padding:.12em .38em;
+  font-size:.84em;
+}
+pre{
+  background:var(--code-bg); color:var(--code-ink);
+  border-radius:10px; padding:14px 16px; overflow-x:auto;
+  line-height:1.62; font-size:.82rem; position:relative;
+  box-shadow:var(--shadow); margin:.9em 0;
+}
+pre code{background:none; padding:0; font-size:1em; color:inherit}
+.copy-btn{
+  position:absolute; top:8px; right:8px; border:none; cursor:pointer;
+  background:rgba(255,255,255,.09); color:#cfc8c1; border-radius:6px;
+  font-size:.7rem; padding:3px 9px; opacity:0; transition:opacity .15s;
+}
+pre:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:rgba(255,255,255,.18)}
+pre.mermaid{
+  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+  display:flex; justify-content:center; box-shadow:none;
+}
+
+/* ---------- 表格 ---------- */
+.table-wrap{overflow-x:auto; margin:.9em 0; border:1px solid var(--line); border-radius:10px}
+table{border-collapse:collapse; width:100%; font-size:.86rem; line-height:1.6}
+th,td{padding:8px 13px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top}
+th{background:var(--chip); font-weight:650; white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td code,th code{white-space:nowrap}
+tbody tr:hover{background:var(--accent-soft)}
+
+/* ---------- 引用/提示 ---------- */
+blockquote{
+  margin:1em 0; padding:10px 16px; background:var(--callout);
+  border:1px solid var(--line); border-radius:10px; color:var(--ink);
+}
+blockquote p{margin:.4em 0}
+blockquote.q-ok{border-color:color-mix(in srgb, var(--ok) 35%, var(--line))}
+blockquote.q-warn{border-color:color-mix(in srgb, var(--warn) 40%, var(--line))}
+blockquote.q-tip{border-color:color-mix(in srgb, var(--tip) 35%, var(--line))}
+
+/* ---------- 移动端 ---------- */
+.menu-btn{
+  display:none; position:fixed; top:12px; left:12px; z-index:60;
+  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+  border-radius:8px; padding:7px 13px; font-size:.85rem; cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.backdrop{display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:49}
+@media (max-width: 980px){
+  .menu-btn{display:block}
+  .sidebar{
+    position:fixed; left:0; top:0; z-index:50; transform:translateX(-100%);
+    transition:transform .2s ease; box-shadow:0 0 30px rgba(0,0,0,.25);
+  }
+  .sidebar.open{transform:none}
+  .backdrop.show{display:block}
+  .main{padding:0 18px}
+  .chapter{padding-top:58px}
+  .hero-title{font-size:1.7rem}
+  .ch-num{font-size:2.2rem}
+}
+</style>
+<button class="menu-btn" id="menuBtn" aria-label="打开目录">☰ 目录</button>
+<div class="backdrop" id="backdrop"></div>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="#intro">
+    <span class="brand-mark">910</span>
+    <span class="brand-name">昇腾 910 训练手册<small>8 卡大模型训练实战</small></span>
+  </a>
+  <nav class="nav">
+    <div class="nav-group"><ul>
+      <li class="nav-item" data-target="intro">
+        <a class="nav-link" href="#intro"><span class="nav-num">◎</span><span>课程总览</span></a>
+        <ul class="subs"></ul>
+      </li>
+    </ul></div>
+    <div class="nav-group"><div class="nav-part">开始</div><ul><li class="nav-item" data-target="ch00"><a class="nav-link" href="#ch00"><span class="nav-num">00</span><span>硬件与生态</span></a><ul class="subs"><li><a href="#ch00-s1">0.1 你手里的硬件：Ascend 910 家族</a></li><li><a href="#ch00-s3">0.2 软件栈：从驱动到训练框架</a></li><li><a href="#ch00-s4">0.3 训练大模型的三条技术路线</a></li><li><a href="#ch00-s5">0.4 一台健康的机器长什么样</a></li><li><a href="#ch00-s6">0.5 本章小结</a></li></ul></li><li class="nav-item" data-target="ch01"><a class="nav-link" href="#ch01"><span class="nav-num">01</span><span>环境搭建</span></a><ul class="subs"><li><a href="#ch01-s1">1.1 版本规划：装之前先想清楚</a></li><li><a href="#ch01-s2">1.2 第一层：驱动与固件（需要 root，装过就跳过）</a></li><li><a href="#ch01-s3">1.3 第二层：CANN（Toolkit + Kernels）</a></li><li><a href="#ch01-s4">1.4 第三层：Python + PyTorch + torch_npu</a></li><li><a href="#ch01-s5">1.5 一键体检与压测</a></li><li><a href="#ch01-s6">1.6 可选：容器化环境（推荐团队使用）</a></li><li><a href="#ch01-s7">1.7 常见问题</a></li></ul></li></ul></div><div class="nav-group"><div class="nav-part">跑通</div><ul><li class="nav-item" data-target="ch02"><a class="nav-link" href="#ch02"><span class="nav-num">02</span><span>单卡上手</span></a><ul class="subs"><li><a href="#ch02-s1">2.1 三行代码理解 torch_npu</a></li><li><a href="#ch02-s2">2.2 哪些东西不用改</a></li><li><a href="#ch02-s3">2.3 混合精度：910B 用 BF16，910A 用 FP16</a></li><li><a href="#ch02-s4">2.4 实战：单卡训练一个迷你 GPT</a></li><li><a href="#ch02-s6">2.5 两个新手必知的性能特性</a></li><li><a href="#ch02-s7">2.6 练习</a></li></ul></li><li class="nav-item" data-target="ch03"><a class="nav-link" href="#ch03"><span class="nav-num">03</span><span>八卡 DDP</span></a><ul class="subs"><li><a href="#ch03-s1">3.1 概念对齐：五个名词</a></li><li><a href="#ch03-s2">3.2 把单卡代码改成 DDP：只需四处改动</a></li><li><a href="#ch03-s3">3.3 启动：torchrun 一行搞定</a></li><li><a href="#ch03-s4">3.4 实测 8 卡通信带宽</a></li><li><a href="#ch03-s5">3.5 HCCL 的几个关键环境变量</a></li><li><a href="#ch03-s6">3.6 常见坑</a></li><li><a href="#ch03-s7">3.7 练习</a></li></ul></li></ul></div><div class="nav-group"><div class="nav-part">实战</div><ul><li class="nav-item" data-target="ch04"><a class="nav-link" href="#ch04"><span class="nav-num">04</span><span>LoRA 微调</span></a><ul class="subs"><li><a href="#ch04-s1">4.1 为什么从 LoRA 开始</a></li><li><a href="#ch04-s2">4.2 准备：下载模型和数据</a></li><li><a href="#ch04-s3">4.3 路线 A：LLaMA-Factory（推荐）</a></li><li><a href="#ch04-s8">4.4 路线 B：transformers + PEFT 手写</a></li><li><a href="#ch04-s9">4.5 910A 及低显存场景的调整</a></li><li><a href="#ch04-s10">4.6 常见坑</a></li><li><a href="#ch04-s11">4.7 练习</a></li></ul></li><li class="nav-item" data-target="ch05"><a class="nav-link" href="#ch05"><span class="nav-num">05</span><span>全参训练</span></a><ul class="subs"><li><a href="#ch05-s1">5.1 先算账：全参训练的显存都花在哪</a></li><li><a href="#ch05-s2">5.2 DeepSpeed 在 NPU 上的安装与验证</a></li><li><a href="#ch05-s3">5.3 跑起来：Trainer + ZeRO-2 全参微调 7B</a></li><li><a href="#ch05-s4">5.4 配置文件精读</a></li><li><a href="#ch05-s5">5.5 ZeRO-3 的 checkpoint 有点特别</a></li><li><a href="#ch05-s6">5.6 FSDP：另一条全参路线（简述）</a></li><li><a href="#ch05-s7">5.7 常见坑</a></li><li><a href="#ch05-s8">5.8 练习</a></li></ul></li><li class="nav-item" data-target="ch06"><a class="nav-link" href="#ch06"><span class="nav-num">06</span><span>预训练</span></a><ul class="subs"><li><a href="#ch06-s1">6.1 为什么 ZeRO 之外还需要 TP/PP</a></li><li><a href="#ch06-s2">6.2 MindSpeed 全家桶是什么关系</a></li><li><a href="#ch06-s3">6.3 数据准备：从 jsonl 到 .bin/.idx</a></li><li><a href="#ch06-s4">6.4 跑起来：8 卡预训练 Qwen2.5-7B 结构</a></li><li><a href="#ch06-s5">6.5 显存不够/想更快时，按顺序动这些旋钮</a></li><li><a href="#ch06-s6">6.6 扩展话题</a></li><li><a href="#ch06-s7">6.7 常见坑</a></li><li><a href="#ch06-s8">6.8 练习</a></li></ul></li></ul></div><div class="nav-group"><div class="nav-part">性能</div><ul><li class="nav-item" data-target="ch07"><a class="nav-link" href="#ch07"><span class="nav-num">07</span><span>性能剖析</span></a><ul class="subs"><li><a href="#ch07-s1">7.1 三层观测法</a></li><li><a href="#ch07-s2">7.2 L0：npu-smi 快速体检</a></li><li><a href="#ch07-s3">7.3 L1：吞吐与 MFU——训练性能的「统一考分」</a></li><li><a href="#ch07-s4">7.4 L2：Ascend PyTorch Profiler——逐算子归因</a></li><li><a href="#ch07-s7">7.5 profiling 的纪律</a></li><li><a href="#ch07-s8">7.6 动手</a></li><li><a href="#ch07-s9">7.7 练习</a></li></ul></li><li class="nav-item" data-target="ch08"><a class="nav-link" href="#ch08"><span class="nav-num">08</span><span>性能优化</span></a><ul class="subs"><li><a href="#ch08-s1">8.0 优化总纲</a></li><li><a href="#ch08-s2">8.1 精度策略：BF16 是基本盘</a></li><li><a href="#ch08-s3">8.2 融合算子：910B 的最大单项收益</a></li><li><a href="#ch08-s4">8.3 显存 ↔ 吞吐再平衡：省出来的显存要花掉</a></li><li><a href="#ch08-s5">8.4 抓「回退算子」：AI CPU 与同步点</a></li><li><a href="#ch08-s6">8.5 通信优化：把它藏进计算里</a></li><li><a href="#ch08-s7">8.6 数据与 Host 侧：别让 NPU 挨饿</a></li><li><a href="#ch08-s8">8.7 8×910 优化清单（贴墙版）</a></li><li><a href="#ch08-s9">8.8 练习</a></li></ul></li></ul></div><div class="nav-group"><div class="nav-part">稳定与上线</div><ul><li class="nav-item" data-target="ch09"><a class="nav-link" href="#ch09"><span class="nav-num">09</span><span>故障排查</span></a><ul class="subs"><li><a href="#ch09-s1">9.1 排障方法论：两个先问</a></li><li><a href="#ch09-s2">9.2 日志体系：报错信息不够时去哪挖</a></li><li><a href="#ch09-s3">9.3 高频故障 Playbook</a></li><li><a href="#ch09-s11">9.4 长训练的保命纪律：断点续训</a></li><li><a href="#ch09-s12">9.5 一键收集诊断信息</a></li><li><a href="#ch09-s13">9.6 练习</a></li></ul></li><li class="nav-item" data-target="ch10"><a class="nav-link" href="#ch10"><span class="nav-num">10</span><span>推理部署</span></a><ul class="subs"><li><a href="#ch10-s1">10.1 第一步永远是：transformers 冒烟验证</a></li><li><a href="#ch10-s2">10.2 vLLM-Ascend：开源生态的标准答案</a></li><li><a href="#ch10-s3">10.3 MindIE：华为官方推理引擎</a></li><li><a href="#ch10-s4">10.4 一台机器同时训练 + 推理</a></li><li><a href="#ch10-s5">10.5 常见坑</a></li><li><a href="#ch10-s6">10.6 课程终点 &amp;amp; 下一步</a></li></ul></li></ul></div><div class="nav-group"><div class="nav-part">附录</div><ul><li class="nav-item" data-target="appendix-a"><a class="nav-link" href="#appendix-a"><span class="nav-num">A</span><span>版本配套</span></a><ul class="subs"><li><a href="#appendix-a-s1">A.1 配套关系总图</a></li><li><a href="#appendix-a-s2">A.2 官方查询入口（以此为准）</a></li><li><a href="#appendix-a-s3">A.3 本课程写作基线（2026 上半年，已验证组合的示例）</a></li><li><a href="#appendix-a-s4">A.4 torch_npu 版本号怎么读</a></li><li><a href="#appendix-a-s5">A.5 升级顺序建议</a></li></ul></li><li class="nav-item" data-target="appendix-b"><a class="nav-link" href="#appendix-b"><span class="nav-num">B</span><span>速查表</span></a><ul class="subs"><li><a href="#appendix-b-s1">B.1 日常命令</a></li><li><a href="#appendix-b-s2">B.2 torchrun 模板</a></li><li><a href="#appendix-b-s3">B.3 环境变量：运行与性能</a></li><li><a href="#appendix-b-s4">B.4 环境变量：HCCL 通信</a></li><li><a href="#appendix-b-s5">B.5 环境变量：调试与日志</a></li><li><a href="#appendix-b-s6">B.6 Python 速查</a></li><li><a href="#appendix-b-s7">B.7 显存账速算（混合精度 + AdamW）</a></li><li><a href="#appendix-b-s8">B.8 课程脚本索引</a></li></ul></li><li class="nav-item" data-target="appendix-c"><a class="nav-link" href="#appendix-c"><span class="nav-num">C</span><span>CUDA→NPU</span></a><ul class="subs"><li><a href="#appendix-c-s1">C.1 概念与工具对照</a></li><li><a href="#appendix-c-s2">C.2 PyTorch API 对照</a></li><li><a href="#appendix-c-s3">C.3 迁移一个现有训练项目的检查清单</a></li><li><a href="#appendix-c-s4">C.4 心态调整（最后一条最重要）</a></li></ul></li></ul></div>
+  </nav>
+  <div class="side-foot">
+    <a href="https://github.com/zky001/hw910_llm_course" rel="noopener">GitHub 仓库 ↗</a>
+    <button id="themeBtn" aria-label="切换深浅色">◐ 主题</button>
+  </div>
+</aside>
+<main class="main">
+  <section class="chapter" id="intro">
+    <div class="hero">
+      <div class="eyebrow">HW910 · LLM TRAINING COURSE</div>
+      <h1 class="hero-title">昇腾 910 · 八卡大模型<br>训练实战手册</h1>
+      <p class="hero-sub">用一台 8 卡昇腾 910 服务器，从零把大模型的微调、全参训练、预训练跑起来，并把性能调到位。</p>
+      <div class="chips">
+        <span class="chip">10 章 + 3 附录</span>
+        <span class="chip">8 × Ascend 910</span>
+        <span class="chip">PyTorch / torch_npu</span>
+        <a class="chip chip-link" href="https://github.com/zky001/hw910_llm_course" rel="noopener">配套代码 ↗</a>
+      </div>
+    </div>
+<p>这是一套面向工程实践的系列教程。所有章节围绕同一个硬件假设展开：<strong>单台服务器、8 张昇腾 910 NPU</strong>（典型机型为 Atlas 800 训练服务器）。每一章都有明确的产出物：要么是一段跑通的训练，要么是一份能落地的调优/排障手段。</p>
+<h2 id="intro-s1">你将学到什么<a class="hlink" href="#intro-s1" aria-label="锚点">#</a></h2>
+<ul>
+<li>把驱动、CANN、<code>torch_npu</code> 装对，并<strong>验证</strong>每一层都正常（第 1 章）</li>
+<li>把熟悉的 PyTorch/CUDA 习惯<strong>平移到 NPU</strong>，单卡跑通训练（第 2 章）</li>
+<li>用 <code>torchrun + HCCL</code> 把 8 张卡组成数据并行集群（第 3 章）</li>
+<li>用 LLaMA-Factory / transformers+PEFT 完成 <strong>8 卡 LoRA 微调</strong>（第 4 章）</li>
+<li>用 DeepSpeed ZeRO 在 8 卡上做 <strong>7B 级全参训练</strong>（第 5 章）</li>
+<li>用 MindSpeed(-LLM) 跑 <strong>Megatron 风格预训练</strong>：TP/PP/SP/重计算（第 6 章）</li>
+<li>用 Ascend PyTorch Profiler + MindStudio Insight <strong>找出性能瓶颈</strong>、计算 MFU（第 7 章）</li>
+<li>系统化的<strong>性能优化</strong>：精度、融合算子、显存、通信、数据流水线（第 8 章）</li>
+<li>常见故障（HCCL 超时、OOM、NaN、卡死）的<strong>定位与恢复</strong>（第 9 章）</li>
+<li>训练完的模型如何用 vLLM-Ascend / MindIE <strong>部署推理</strong>（第 10 章）</li>
+</ul>
+<h2 id="intro-s2">课程目录<a class="hlink" href="#intro-s2" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>章节</th>
+<th>主题</th>
+<th>产出物</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#ch00">第 0 章</a></td>
+<td>昇腾 910 硬件与软件生态全景</td>
+<td>看懂自己的机器和技术选型</td>
+</tr>
+<tr>
+<td><a href="#ch01">第 1 章</a></td>
+<td>环境搭建与验证</td>
+<td>一套通过全部自检的训练环境</td>
+</tr>
+<tr>
+<td><a href="#ch02">第 2 章</a></td>
+<td>PyTorch NPU 上手与单卡训练</td>
+<td>单卡训练一个迷你 GPT</td>
+</tr>
+<tr>
+<td><a href="#ch03">第 3 章</a></td>
+<td>8 卡分布式：torchrun + DDP + HCCL</td>
+<td>8 卡数据并行训练 + 通信带宽实测</td>
+</tr>
+<tr>
+<td><a href="#ch04">第 4 章</a></td>
+<td>实战一：8 卡 LoRA 微调 Qwen</td>
+<td>微调出一个自己的对话模型</td>
+</tr>
+<tr>
+<td><a href="#ch05">第 5 章</a></td>
+<td>实战二：DeepSpeed ZeRO 全参训练</td>
+<td>8 卡全参微调 7B 模型</td>
+</tr>
+<tr>
+<td><a href="#ch06">第 6 章</a></td>
+<td>实战三：MindSpeed 预训练（TP/PP）</td>
+<td>Megatron 风格预训练跑通</td>
+</tr>
+<tr>
+<td><a href="#ch07">第 7 章</a></td>
+<td>性能剖析与 MFU</td>
+<td>拿到自己训练任务的性能画像</td>
+</tr>
+<tr>
+<td><a href="#ch08">第 8 章</a></td>
+<td>性能优化实战</td>
+<td>一份可逐项落地的优化清单</td>
+</tr>
+<tr>
+<td><a href="#ch09">第 9 章</a></td>
+<td>稳定性与故障排查</td>
+<td>排障手册 + 一键诊断脚本</td>
+</tr>
+<tr>
+<td><a href="#ch10">第 10 章</a></td>
+<td>番外：推理部署</td>
+<td>用 vLLM-Ascend 起一个 OpenAI 兼容服务</td>
+</tr>
+<tr>
+<td><a href="#appendix-a">附录 A</a></td>
+<td>版本配套速查</td>
+<td>避免 90% 的环境问题</td>
+</tr>
+<tr>
+<td><a href="#appendix-b">附录 B</a></td>
+<td>命令与环境变量速查表</td>
+<td>贴在工位上的那张纸</td>
+</tr>
+<tr>
+<td><a href="#appendix-c">附录 C</a></td>
+<td>CUDA → NPU 迁移对照表</td>
+<td>老 CUDA 用户的翻译词典</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="intro-s3">学习路径<a class="hlink" href="#intro-s3" aria-label="锚点">#</a></h2>
+<pre class="mermaid">flowchart LR
+    A[第0-1章&lt;br&gt;认识硬件+装环境] --&gt; B[第2章&lt;br&gt;单卡跑通]
+    B --&gt; C[第3章&lt;br&gt;8卡DDP]
+    C --&gt; D{你的目标?}
+    D --&gt;|轻量定制| E[第4章 LoRA微调]
+    D --&gt;|效果优先| F[第5章 全参训练]
+    D --&gt;|从头训练/超大模型| G[第6章 MindSpeed预训练]
+    E --&gt; H[第7章 性能剖析]
+    F --&gt; H
+    G --&gt; H
+    H --&gt; I[第8章 性能优化]
+    I --&gt; J[第9章 排障]
+    J --&gt; K[第10章 部署上线]
+</pre>
+<p>赶时间的话：<strong>1 → 2 → 3 → 4</strong> 是最短可用路径（两三个小时内可以微调出第一个模型）；第 7、8 章在你开始在意训练速度时再回来看。</p>
+<h2 id="intro-s4">硬件与版本基线<a class="hlink" href="#intro-s4" aria-label="锚点">#</a></h2>
+<p>教程所有示例基于以下基线编写。版本相关的内容集中在<a href="#appendix-a">附录 A</a>，正文尽量不重复具体版本号。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>基线</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>服务器</td>
+<td>Atlas 800 训练服务器（8 × Ascend 910）</td>
+<td>其他 8 卡 910 整机同样适用</td>
+</tr>
+<tr>
+<td>NPU 芯片</td>
+<td>以 <strong>910B（Atlas A2，单卡 64GB HBM）</strong> 为主</td>
+<td>910A（32GB）的差异会单独标注</td>
+</tr>
+<tr>
+<td>CPU / 架构</td>
+<td>鲲鹏 920，<strong>aarch64</strong></td>
+<td>部分整机是 x86，装包时注意架构</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>openEuler / Ubuntu（Linux）</td>
+<td></td>
+</tr>
+<tr>
+<td>CANN</td>
+<td>8.x（示例以 8.1.RC1 为基线）</td>
+<td></td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10</td>
+<td></td>
+</tr>
+<tr>
+<td>PyTorch / torch_npu</td>
+<td>2.5.1 / 2.5.1</td>
+<td>两者版本必须严格配套</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout q-warn"><p>⚠️ <strong>昇腾软件栈迭代很快。</strong> 本教程写作基线为 2026 年上半年的稳定组合，安装任何组件前，请先对照<a href="#appendix-a">附录 A</a> 和官方配套表确认版本关系。教程中的原理、工作流和排障方法是长期稳定的，具体版本号不是。</p>
+</blockquote>
+<h2 id="intro-s5">快速开始<a class="hlink" href="#intro-s5" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">git clone https://github.com/zky001/hw910_llm_course.git
+cd hw910_llm_course
+
+# 1. 检查机器现状（驱动/CANN/torch_npu 装没装、装的什么版本）
+bash 01-environment/check_env.sh
+
+# 2. 环境没问题的话，跑一个单卡 &quot;hello world&quot;
+python 02-single-card/hello_npu.py
+
+# 3. 然后 8 卡跑起来
+bash 03-multi-card-ddp/run_ddp_8npu.sh
+</code></pre>
+<h2 id="intro-s6">约定<a class="hlink" href="#intro-s6" aria-label="锚点">#</a></h2>
+<ul>
+<li>命令行以 <code>$</code> 开头的是在普通 shell 执行；需要 root 的会写 <code>sudo</code> 或明确说明。</li>
+<li>所有「示例输出」都是<strong>示意</strong>，你的版本号、数值会不同，关注结构而不是具体数字。</li>
+<li>教程主线走 <strong>PyTorch（torch_npu）路线</strong>，这是社区生态最好、迁移成本最低的路线；MindSpore 路线在第 0 章有介绍和选型建议。</li>
+</ul>
+<h2 id="intro-s7">官方资料入口<a class="hlink" href="#intro-s7" aria-label="锚点">#</a></h2>
+<ul>
+<li>昇腾社区（文档/驱动/CANN 下载）：<a href="https://www.hiascend.com">https://www.hiascend.com</a></li>
+<li>Ascend Extension for PyTorch（torch_npu）：<a href="https://github.com/Ascend/pytorch">https://github.com/Ascend/pytorch</a> / <a href="https://gitee.com/ascend/pytorch">https://gitee.com/ascend/pytorch</a></li>
+<li>MindSpeed / MindSpeed-LLM：<a href="https://gitee.com/ascend/MindSpeed">https://gitee.com/ascend/MindSpeed</a> / <a href="https://gitee.com/ascend/MindSpeed-LLM">https://gitee.com/ascend/MindSpeed-LLM</a></li>
+<li>LLaMA-Factory：<a href="https://github.com/hiyouga/LLaMA-Factory">https://github.com/hiyouga/LLaMA-Factory</a></li>
+<li>vLLM-Ascend：<a href="https://github.com/vllm-project/vllm-ascend">https://github.com/vllm-project/vllm-ascend</a></li>
+</ul>
+<hr />
+<p><em>本课程为社区教程，与华为官方无关；涉及的商标归各自所有者。发现内容过期或错误，欢迎提 Issue / PR。</em></p>
+
+  </section>
+  
+<section class="chapter" id="ch00">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">00</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 0 章</div>
+      <h1>昇腾 910 硬件与软件生态全景</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：搞清楚你手里这 8 张卡到底是什么、软件栈由哪几层组成、训练大模型有哪几条技术路线、分别适合什么场景。后面每一章都建立在这些概念之上。</p>
+</blockquote>
+<h2 id="ch00-s1">0.1 你手里的硬件：Ascend 910 家族<a class="hlink" href="#ch00-s1" aria-label="锚点">#</a></h2>
+<p>「昇腾 910」不是一款芯片，而是一个家族。先分清自己是哪一代，因为<strong>精度支持、显存大小、可用的加速特性都不一样</strong>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Ascend 910（910A）</th>
+<th>Ascend 910B 系列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>发布时间</td>
+<td>2019</td>
+<td>2023 起</td>
+</tr>
+<tr>
+<td>典型整机</td>
+<td>Atlas 800 训练服务器（型号 9000/9010）</td>
+<td>Atlas 800T A2、Atlas 900 A2 PoD</td>
+</tr>
+<tr>
+<td>单卡显存（HBM）</td>
+<td>32 GB</td>
+<td>多为 64 GB（910B4 为 32 GB）</td>
+</tr>
+<tr>
+<td>FP16 算力</td>
+<td>320 TFLOPS（官方值）</td>
+<td>因子型号而异（官方未统一公开，社区口径约 280–400 TFLOPS）</td>
+</tr>
+<tr>
+<td><strong>BF16</strong></td>
+<td>❌ 不支持</td>
+<td>✅ 支持</td>
+</tr>
+<tr>
+<td>FlashAttention 融合算子（<code>npu_fusion_attention</code>）</td>
+<td>❌ 不支持</td>
+<td>✅ 支持</td>
+</tr>
+<tr>
+<td>文档中的产品线称呼</td>
+<td>「Atlas 训练系列产品」</td>
+<td>「<strong>Atlas A2 训练系列产品</strong>」</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout q-ok"><p>✅ <strong>怎么确认自己是哪一代？</strong> 跑 <code>npu-smi info</code>，看 <code>Name</code> 列：<code>910B1/910B2/910B3/910B4</code> 是 910B 系列；只写 <code>910A</code> 或 <code>910</code> 的是第一代。看文档时注意：910B 对应文档里的「Atlas A2 训练系列产品」，很多融合算子、新特性都只支持 A2。</p>
+</blockquote>
+<p><strong>对训练实践的直接影响：</strong></p>
+<ul>
+<li><strong>910B</strong>：混合精度直接用 <strong>BF16</strong>，数值稳定、不需要 loss scaling，是当前大模型训练的默认选择。</li>
+<li><strong>910A</strong>：只能用 <strong>FP16 + 动态 loss scaling</strong>，7B 以上模型容易遇到溢出问题，且单卡 32GB 显存更紧张。本教程的示例都能跑，但涉及 BF16 和融合注意力的部分需要按标注降级。</li>
+</ul>
+<h3 id="ch00-s2">单机 8 卡的互联拓扑<a class="hlink" href="#ch00-s2" aria-label="锚点">#</a></h3>
+<p>一台 Atlas 800 里，8 张 NPU 之间通过华为自研的 <strong>HCCS</strong> 高速总线互联（对标 NVIDIA 的 NVLink），跨机则走每张 NPU 自带的 <strong>200Gb RoCE 网口</strong>（对标 InfiniBand）。这决定了一个重要事实：</p>
+<blockquote class="callout"><p><strong>机内通信远快于机间通信。</strong> 单机 8 卡内做张量并行（TP）、大量 AllReduce 都没问题；一旦扩展到多机，并行策略就要重新设计（TP 不出机、跨机只走 DP/PP）。本教程聚焦单机 8 卡，多机差异会在第 6 章和附录里提示。</p>
+</blockquote>
+<p>另外注意：多数 Atlas 训练服务器 CPU 是<strong>鲲鹏（aarch64）</strong>。装 Python 包时要用 aarch64 的 wheel；x86 的 conda 环境、你在自己电脑上导出的 <code>requirements.txt</code> 里的二进制包不能直接照搬。</p>
+<h2 id="ch00-s3">0.2 软件栈：从驱动到训练框架<a class="hlink" href="#ch00-s3" aria-label="锚点">#</a></h2>
+<p>昇腾软件栈是分层的，<strong>每一层都要装对且互相配套</strong>。用 NVIDIA 生态类比最容易理解：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层</th>
+<th>昇腾</th>
+<th>NVIDIA 对应</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内核驱动 + 固件</td>
+<td>Driver / Firmware（HDK）</td>
+<td>GPU Driver</td>
+<td>让操作系统认到卡</td>
+</tr>
+<tr>
+<td>计算架构</td>
+<td><strong>CANN</strong>（Toolkit + Kernels）</td>
+<td>CUDA Toolkit + cuDNN</td>
+<td>算子库、运行时、编译器</td>
+</tr>
+<tr>
+<td>集合通信</td>
+<td><strong>HCCL</strong>（含在 CANN 中）</td>
+<td>NCCL</td>
+<td>多卡/多机通信</td>
+</tr>
+<tr>
+<td>框架适配</td>
+<td><strong>torch_npu</strong></td>
+<td>（原生支持）</td>
+<td>让 PyTorch 用上 NPU</td>
+</tr>
+<tr>
+<td>分布式加速库</td>
+<td><strong>MindSpeed</strong>、DeepSpeed(NPU)</td>
+<td>Megatron-LM、DeepSpeed</td>
+<td>TP/PP/ZeRO 等</td>
+</tr>
+<tr>
+<td>应用层</td>
+<td>LLaMA-Factory、MindSpeed-LLM 等</td>
+<td>同左</td>
+<td>开箱即用的训练流程</td>
+</tr>
+<tr>
+<td>工具</td>
+<td><code>npu-smi</code>、msprof、MindStudio</td>
+<td><code>nvidia-smi</code>、Nsight</td>
+<td>监控与调优</td>
+</tr>
+</tbody>
+</table></div>
+<pre class="mermaid">flowchart TB
+    subgraph 应用层
+        LF[LLaMA-Factory] --- MSL[MindSpeed-LLM] --- HF[transformers/PEFT/DeepSpeed]
+    end
+    subgraph 框架层
+        PT[PyTorch + torch_npu]
+        MS[MindSpore]
+    end
+    subgraph 系统层
+        CANN[CANN：算子库/运行时/HCCL/编译器]
+        DRV[NPU 驱动 + 固件]
+    end
+    应用层 --&gt; PT
+    应用层 -.-&gt; MS
+    PT --&gt; CANN
+    MS --&gt; CANN
+    CANN --&gt; DRV
+    DRV --&gt; HW[8 × Ascend 910]
+</pre>
+<p>几个高频概念，先混个脸熟（后面章节都会实际用到）：</p>
+<ul>
+<li><strong>CANN</strong>：Compute Architecture for Neural Networks，地位等同 CUDA。装完后所有环境变量靠 <code>source /usr/local/Ascend/ascend-toolkit/set_env.sh</code> 注入。</li>
+<li><strong>HCCL</strong>：Huawei Collective Communication Library。PyTorch 里 <code>init_process_group(backend=&quot;hccl&quot;)</code>，对标 <code>backend=&quot;nccl&quot;</code>。</li>
+<li><strong>torch_npu</strong>：PyTorch 的昇腾插件。<code>import torch_npu</code> 之后，<code>torch.npu.*</code> 的用法与 <code>torch.cuda.*</code> 几乎一一对应，设备名是 <code>&quot;npu&quot;</code>。</li>
+<li><strong>AI Core / AI CPU</strong>：NPU 上的两类执行单元。绝大多数算子跑在 AI Core（快）；少数算子（如某些 int64 运算、<code>nonzero</code>）会落到 AI CPU（慢一个数量级），是常见的性能陷阱，第 7、8 章专门讲怎么抓。</li>
+</ul>
+<h2 id="ch00-s4">0.3 训练大模型的三条技术路线<a class="hlink" href="#ch00-s4" aria-label="锚点">#</a></h2>
+<p>在 8 卡 910 上训练大模型，实践中主要走三条路线，<strong>按「省事程度」和「可控程度」权衡</strong>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路线</th>
+<th>代表工具</th>
+<th>适合场景</th>
+<th>本课程章节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 开箱即用微调</td>
+<td><strong>LLaMA-Factory</strong></td>
+<td>LoRA/QLoRA/SFT/DPO，改配置文件就能跑</td>
+<td>第 4 章</td>
+</tr>
+<tr>
+<td>② HuggingFace 生态自己写</td>
+<td>transformers + PEFT + <strong>DeepSpeed</strong></td>
+<td>需要自定义数据流/损失函数/训练逻辑</td>
+<td>第 4、5 章</td>
+</tr>
+<tr>
+<td>③ Megatron 体系</td>
+<td><strong>MindSpeed-LLM</strong>（Megatron-LM 昇腾适配）</td>
+<td>预训练、几十 B 以上、追求极致 MFU</td>
+<td>第 6 章</td>
+</tr>
+</tbody>
+</table></div>
+<p>选型速查：</p>
+<ul>
+<li><strong>给 7B/14B 模型做 LoRA 定制</strong> → 路线 ①，最快当天出活。</li>
+<li><strong>全参微调 7B 左右模型、自定义训练逻辑</strong> → 路线 ②（ZeRO-2/3 就够了）。</li>
+<li><strong>预训练（哪怕小模型）、长序列、或者以后要扩多机</strong> → 路线 ③，前期学习成本最高，但并行手段和算子优化最全。</li>
+</ul>
+<blockquote class="callout"><p><strong>PyTorch 还是 MindSpore？</strong> 昇腾对两者都支持。MindSpore（配套 MindFormers 套件）是华为自研框架，图编译模式在部分场景性能更好；但 PyTorch 路线生态兼容性好——HuggingFace 模型/数据集直接用、开源训练框架基本都支持、团队没有迁移成本。<strong>本课程主线全部使用 PyTorch（torch_npu）</strong>，这也是目前社区做大模型训练的主流选择。</p>
+</blockquote>
+<h2 id="ch00-s5">0.4 一台健康的机器长什么样<a class="hlink" href="#ch00-s5" aria-label="锚点">#</a></h2>
+<p>上手一台机器，先跑这三条命令建立「体检基线」（详细排查见第 1、9 章）：</p>
+<pre><code class="language-bash"># 1. 卡都在不在、健康不健康（对标 nvidia-smi）
+npu-smi info
+
+# 2. 驱动版本
+cat /usr/local/Ascend/driver/version.info
+
+# 3. CANN 版本（路径以实际安装为准）
+cat /usr/local/Ascend/ascend-toolkit/latest/version.cfg 2&gt;/dev/null || \
+ls /usr/local/Ascend/ascend-toolkit/
+</code></pre>
+<p><code>npu-smi info</code> 的示例输出（示意，重点看这几列）：</p>
+<pre><code class="language-text">+------------------------------------------------------------------------------------+
+| npu-smi 24.1.rc2                 Version: 24.1.rc2                                 |
++---------------------------+---------------+----------------------------------------+
+| NPU   Name                | Health        | Power(W)    Temp(C)           Hugepages|
+| Chip                      | Bus-Id        | AICore(%)   Memory-Usage(MB)  HBM-Usage|
++===========================+===============+========================================+
+| 0     910B1               | OK            | 88.4        41                0        |
+| 0                         | 0000:C1:00.0  | 0           0    / 0          3 / 65536|
++---------------------------+---------------+----------------------------------------+
+| ...（共 8 张）                                                                      |
++------------------------------------------------------------------------------------+
+</code></pre>
+<ul>
+<li><code>Health</code> 全部 <code>OK</code>、8 张卡都列出来 → 硬件层没问题。</li>
+<li><code>Name</code> 列确认芯片型号（见 0.1 的两代差异）。</li>
+<li><code>HBM-Usage</code> 是显存占用；训练时用它观察显存水位。</li>
+</ul>
+<h2 id="ch00-s6">0.5 本章小结<a class="hlink" href="#ch00-s6" aria-label="锚点">#</a></h2>
+<ul>
+<li>910A 和 910B 是两代芯片：<strong>910B 支持 BF16 和 FlashAttention 融合算子，910A 不支持</strong>——这是影响后面所有章节的最大差异点。</li>
+<li>软件栈从下到上：<strong>驱动 → CANN → torch_npu → 加速库/应用框架</strong>，层层配套，版本关系在<a href="#appendix-a">附录 A</a>。</li>
+<li>三条训练路线：<strong>LLaMA-Factory（省事）→ HF+DeepSpeed（灵活）→ MindSpeed（极致）</strong>，课程会依次带你走一遍。</li>
+</ul>
+<p><strong>下一章</strong> → <a href="#ch01">第 1 章 · 环境搭建与验证</a>：把这台机器从「裸机」变成「随时可以开训」。</p>
+
+</section>
+<section class="chapter" id="ch01">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">01</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 1 章</div>
+      <h1>环境搭建与验证</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：把「驱动 → CANN → Python/torch_npu」三层装对，并且<strong>每装一层就验证一层</strong>。做完本章，你会得到一套通过全部自检的训练环境，以及一个以后随时可以重跑的体检脚本。</p>
+</blockquote>
+<p><strong>前置条件</strong>：能 SSH 到服务器；有 root 或 sudo（仅驱动安装需要）；机器能访问外网或有内网 pip/镜像源。</p>
+<blockquote class="callout q-tip"><p>💡 <strong>先跑体检再动手。</strong> 很多机器交付时驱动甚至 CANN 已经装好。先执行本章的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/01-environment/check_env.sh"><code>check_env.sh</code></a>，只补缺的层，不要重复安装：</p>
+<pre><code class="language-bash">bash 01-environment/check_env.sh
+</code></pre>
+</blockquote>
+<h2 id="ch01-s1">1.1 版本规划：装之前先想清楚<a class="hlink" href="#ch01-s1" aria-label="锚点">#</a></h2>
+<p>昇腾环境 90% 的问题源于版本不配套。三层的关系是：</p>
+<pre><code class="language-text">驱动/固件  ←配套→  CANN  ←配套→  torch_npu  ←严格一一对应→  PyTorch
+</code></pre>
+<p>规则只有三条：</p>
+<ol>
+<li><strong>torch 和 torch_npu 版本必须严格对应</strong>（如 torch 2.5.1 ↔ torch_npu 2.5.1.x），不对应会直接 import 失败或运行时报错。</li>
+<li><strong>torch_npu 对 CANN 有最低版本要求</strong>，CANN 对驱动有最低版本要求。新驱动通常兼容旧 CANN，反过来不一定。</li>
+<li>装之前，到官方「版本配套表」查一次，照抄一组已验证的组合。本课程基线组合与查询入口见<a href="#appendix-a">附录 A</a>。</li>
+</ol>
+<p>本章示例使用基线组合：<strong>CANN 8.1.RC1 + Python 3.10 + torch 2.5.1 + torch_npu 2.5.1</strong>（aarch64）。</p>
+<h2 id="ch01-s2">1.2 第一层：驱动与固件（需要 root，装过就跳过）<a class="hlink" href="#ch01-s2" aria-label="锚点">#</a></h2>
+<p>从<a href="https://www.hiascend.com/hardware/firmware-drivers">昇腾社区-固件与驱动</a>下载对应<strong>芯片型号</strong>（910A / 910B）和<strong>架构</strong>（aarch64 / x86_64）的 <code>.run</code> 包。</p>
+<pre><code class="language-bash"># 包名示意，以实际下载为准
+chmod +x Ascend-hdk-910b-npu-driver_*_linux-aarch64.run
+chmod +x Ascend-hdk-910b-npu-firmware_*.run
+
+# 先驱动后固件
+sudo ./Ascend-hdk-910b-npu-driver_*_linux-aarch64.run --full --install-for-all
+sudo ./Ascend-hdk-910b-npu-firmware_*.run --full
+
+# 固件升级需要重启生效
+sudo reboot
+</code></pre>
+<blockquote class="callout q-ok"><p>✅ <strong>验证</strong>：重启后执行 <code>npu-smi info</code>，应列出全部 8 张卡且 <code>Health</code> 均为 <code>OK</code>。这一步不过，后面全都免谈——先去第 9 章「硬件层排查」。</p>
+</blockquote>
+<h2 id="ch01-s3">1.3 第二层：CANN（Toolkit + Kernels）<a class="hlink" href="#ch01-s3" aria-label="锚点">#</a></h2>
+<p>CANN 从<a href="https://www.hiascend.com/software/cann">昇腾社区-CANN</a> 下载，需要装<strong>两个包</strong>：</p>
+<ul>
+<li><strong>Toolkit</strong>（开发套件，含运行时/编译器/HCCL）</li>
+<li><strong>Kernels</strong>（二进制算子包，<strong>按芯片型号选</strong>：910B 选 <code>kernels-910b</code>）</li>
+</ul>
+<pre><code class="language-bash"># CANN 依赖若干系统库和 Python 包（用于算子编译），先装上
+pip install attrs cython numpy decorator sympy cffi pyyaml pathlib2 psutil protobuf scipy requests absl-py
+
+chmod +x Ascend-cann-toolkit_8.1.RC1_linux-aarch64.run
+chmod +x Ascend-cann-kernels-910b_8.1.RC1_linux.run
+
+# 普通用户安装到 ~/Ascend，root 安装到 /usr/local/Ascend（推荐后者，多用户共享）
+sudo ./Ascend-cann-toolkit_8.1.RC1_linux-aarch64.run --install
+sudo ./Ascend-cann-kernels-910b_8.1.RC1_linux.run --install
+</code></pre>
+<p>装完后，<strong>每个要用 NPU 的 shell 都必须先加载 CANN 环境变量</strong>：</p>
+<pre><code class="language-bash">source /usr/local/Ascend/ascend-toolkit/set_env.sh
+</code></pre>
+<p>建议直接写进 <code>~/.bashrc</code>。忘记 source 是新手第一大坑，症状是 <code>import torch_npu</code> 报找不到 <code>libascendcl.so</code> 之类的动态库。</p>
+<blockquote class="callout q-ok"><p>✅ <strong>验证</strong>：</p>
+<pre><code class="language-bash">source /usr/local/Ascend/ascend-toolkit/set_env.sh
+cat $ASCEND_TOOLKIT_HOME/version.cfg      # 能看到 CANN 版本号
+</code></pre>
+</blockquote>
+<h2 id="ch01-s4">1.4 第三层：Python + PyTorch + torch_npu<a class="hlink" href="#ch01-s4" aria-label="锚点">#</a></h2>
+<p>推荐用 conda 隔离环境（aarch64 机器用 <a href="https://github.com/conda-forge/miniforge">Miniforge</a>）：</p>
+<pre><code class="language-bash">conda create -n npu python=3.10 -y
+conda activate npu
+
+# 1) 装 PyTorch —— 注意：装 CPU 版即可，NPU 支持完全由 torch_npu 提供
+#    aarch64 上 pip 默认源给的就是 CPU 版
+pip install torch==2.5.1
+
+# 2) 装配套的 torch_npu（包名带横杠，import 时是下划线）
+pip install torch-npu==2.5.1
+
+# 3) 常用基础包
+pip install numpy pyyaml setuptools
+</code></pre>
+<p>国内网络建议配置 pip 镜像（如清华源），下载模型建议用 ModelScope 或 HF 镜像（第 4 章细讲）。</p>
+<blockquote class="callout q-ok"><p>✅ <strong>验证</strong>（本章提供了更完整的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/01-environment/verify_npu.py"><code>verify_npu.py</code></a>）：</p>
+<pre><code class="language-bash">python -c &quot;
+import torch, torch_npu
+print('torch:', torch.__version__)
+print('torch_npu:', torch_npu.__version__)
+print('npu available:', torch.npu.is_available())
+print('npu count:', torch.npu.device_count())
+x = torch.randn(2, 3).npu()
+print((x @ x.T).cpu())
+&quot;
+</code></pre>
+<p>期望：<code>npu available: True</code>、<code>npu count: 8</code>、矩阵乘出数字不报错。</p>
+</blockquote>
+<h2 id="ch01-s5">1.5 一键体检与压测<a class="hlink" href="#ch01-s5" aria-label="锚点">#</a></h2>
+<p>本章附带两个脚本，以后每次拿到新机器/新环境都先跑：</p>
+<pre><code class="language-bash"># 体检：逐层检查驱动/CANN/Python 包/环境变量，输出 PASS/FAIL 清单
+bash 01-environment/check_env.sh
+
+# 功能+性能验证：8 卡逐卡做矩阵乘，报告每张卡的 TFLOPS
+python 01-environment/verify_npu.py
+</code></pre>
+<p><code>verify_npu.py</code> 会对每张卡跑一个 FP16 大矩阵乘并输出实测 TFLOPS。<strong>8 张卡数值应该接近</strong>；某张卡明显偏慢（差 20% 以上）通常意味着降频（散热/功耗）或该卡有问题，先解决再开训，否则它会拖慢整个分布式任务（木桶效应）。</p>
+<p>示例输出（示意）：</p>
+<pre><code class="language-text">[npu:0] matmul 8192x8192x8192 fp16: 6.15 ms/iter  ≈ 178.8 TFLOPS
+[npu:1] matmul 8192x8192x8192 fp16: 6.21 ms/iter  ≈ 177.1 TFLOPS
+...
+[npu:7] matmul 8192x8192x8192 fp16: 6.17 ms/iter  ≈ 178.2 TFLOPS
+All 8 NPUs OK, max deviation 1.0%
+</code></pre>
+<h2 id="ch01-s6">1.6 可选：容器化环境（推荐团队使用）<a class="hlink" href="#ch01-s6" aria-label="锚点">#</a></h2>
+<p>裸机 conda 适合个人折腾；团队共用一台 8 卡机时，强烈建议用容器把「CANN + Python 栈」封装起来（驱动留在宿主机）：</p>
+<pre><code class="language-bash"># 方式一：官方镜像（昇腾镜像仓库 ascendhub 提供 ascend-pytorch 等镜像，
+#         tag 已经把 CANN/torch/torch_npu 配好，按配套表选 tag）
+docker pull &lt;ascendhub 镜像地址&gt;/ascend-pytorch:&lt;tag&gt;
+
+# 方式二：任意镜像 + 手动挂载设备与驱动（这套挂载参数是通用的）
+docker run -it --ipc=host --network host \
+  --device=/dev/davinci0 --device=/dev/davinci1 \
+  --device=/dev/davinci2 --device=/dev/davinci3 \
+  --device=/dev/davinci4 --device=/dev/davinci5 \
+  --device=/dev/davinci6 --device=/dev/davinci7 \
+  --device=/dev/davinci_manager \
+  --device=/dev/devmm_svm \
+  --device=/dev/hisi_hdc \
+  -v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \
+  -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi:ro \
+  -v /etc/ascend_install.info:/etc/ascend_install.info:ro \
+  -v $PWD:/workspace -w /workspace \
+  &lt;image&gt; bash
+</code></pre>
+<p>如果集群装了 <strong>Ascend Docker Runtime</strong>（MindX DL 组件），可以省掉这一长串：<code>docker run --runtime=ascend -e ASCEND_VISIBLE_DEVICES=0-7 ...</code>。</p>
+<blockquote class="callout"><p><code>--ipc=host</code>（或足够大的 <code>--shm-size</code>）别忘了：PyTorch DataLoader 多进程要用共享内存，不加会在训练中报 shm 相关错误。</p>
+</blockquote>
+<h2 id="ch01-s7">1.7 常见问题<a class="hlink" href="#ch01-s7" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>import torch_npu</code> 报 <code>libascendcl.so: cannot open shared object file</code></td>
+<td>没 <code>source .../set_env.sh</code>，或 CANN 没装</td>
+</tr>
+<tr>
+<td><code>import torch_npu</code> 报 undefined symbol / ABI 错误</td>
+<td>torch 与 torch_npu 版本不配套，按附录 A 重装</td>
+</tr>
+<tr>
+<td><code>torch.npu.is_available()</code> 返回 False</td>
+<td>驱动没装好（先看 <code>npu-smi info</code>）；或容器里没挂载 <code>/dev/davinci*</code></td>
+</tr>
+<tr>
+<td>pip 装 torch 巨慢/装成 x86 包</td>
+<td>aarch64 机器 + 未配置镜像源；确认 <code>uname -m</code> 与 wheel 架构一致</td>
+</tr>
+<tr>
+<td>首次跑模型特别慢，之后正常</td>
+<td>算子在线编译的正常现象，编译结果会缓存（详见第 8 章 jit_compile 说明）</td>
+</tr>
+<tr>
+<td>只有部分卡可见</td>
+<td>检查 <code>ASCEND_RT_VISIBLE_DEVICES</code> 是否被设置过（对标 <code>CUDA_VISIBLE_DEVICES</code>）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>下一章</strong> → <a href="#ch02">第 2 章 · PyTorch NPU 上手与单卡训练</a>：环境好了，写第一行 NPU 代码。</p>
+
+</section>
+<section class="chapter" id="ch02">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">02</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 2 章</div>
+      <h1>PyTorch NPU 上手与单卡训练</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：掌握 torch_npu 的基本用法和与 CUDA 的对应关系，在<strong>一张</strong> 910 上从零训练一个迷你 GPT。分布式的一切都建立在单卡跑通之上——单卡还没稳，别急着上 8 卡。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 1 章，<code>check_env.sh</code> 全 PASS。</p>
+<h2 id="ch02-s1">2.1 三行代码理解 torch_npu<a class="hlink" href="#ch02-s1" aria-label="锚点">#</a></h2>
+<pre><code class="language-python">import torch
+import torch_npu            # ① 导入即生效：注册 &quot;npu&quot; 设备和 torch.npu.* 接口
+
+x = torch.randn(2, 3).npu() # ② 张量上卡，等价于 .to(&quot;npu&quot;)
+print(x.device)             # npu:0
+y = x @ x.T                 # ③ 之后的用法与 CUDA 完全一致
+</code></pre>
+<p>核心心智模型：<strong>把你会的 <code>torch.cuda.*</code> 全部替换成 <code>torch.npu.*</code>，把 <code>&quot;cuda&quot;</code> 替换成 <code>&quot;npu&quot;</code>，90% 的代码就迁移完了。</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CUDA 写法</th>
+<th>NPU 写法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>torch.device(&quot;cuda&quot;, 0)</code></td>
+<td><code>torch.device(&quot;npu&quot;, 0)</code></td>
+</tr>
+<tr>
+<td><code>tensor.cuda()</code> / <code>.to(&quot;cuda&quot;)</code></td>
+<td><code>tensor.npu()</code> / <code>.to(&quot;npu&quot;)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.is_available()</code></td>
+<td><code>torch.npu.is_available()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.set_device(i)</code></td>
+<td><code>torch.npu.set_device(i)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.synchronize()</code></td>
+<td><code>torch.npu.synchronize()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.manual_seed_all(s)</code></td>
+<td><code>torch.npu.manual_seed_all(s)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.max_memory_allocated()</code></td>
+<td><code>torch.npu.max_memory_allocated()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.empty_cache()</code></td>
+<td><code>torch.npu.empty_cache()</code></td>
+</tr>
+<tr>
+<td><code>CUDA_VISIBLE_DEVICES=0,1</code></td>
+<td><code>ASCEND_RT_VISIBLE_DEVICES=0,1</code></td>
+</tr>
+<tr>
+<td><code>nvidia-smi</code></td>
+<td><code>npu-smi info</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>完整对照表见<a href="#appendix-c">附录 C</a>。</p>
+<p><strong>存量 CUDA 代码不想改？</strong> torch_npu 提供了一键迁移垫片，在入口文件最前面加两行，运行时自动把 <code>cuda</code> 调用转到 NPU：</p>
+<pre><code class="language-python">import torch_npu
+from torch_npu.contrib import transfer_to_npu   # 之后代码里的 .cuda()/&quot;cuda&quot; 都会被接管
+</code></pre>
+<p>适合快速验证第三方项目能不能跑；<strong>自己长期维护的代码建议显式写 npu</strong>，行为更可控。</p>
+<p>先跑本章的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/02-single-card/hello_npu.py"><code>hello_npu.py</code></a> 感受一遍以上所有 API：</p>
+<pre><code class="language-bash">python 02-single-card/hello_npu.py
+</code></pre>
+<h2 id="ch02-s2">2.2 哪些东西不用改<a class="hlink" href="#ch02-s2" aria-label="锚点">#</a></h2>
+<p>torch_npu 的设计目标就是「PyTorch 原生体验」，以下内容在 NPU 上<strong>原样可用</strong>：</p>
+<ul>
+<li>autograd、<code>nn.Module</code>、optimizer、lr_scheduler</li>
+<li><code>DataLoader</code>（<code>pin_memory=True</code> + <code>tensor.to(&quot;npu&quot;, non_blocking=True)</code> 的异步搬运习惯照旧）</li>
+<li><code>state_dict</code> 保存/加载（权重会自动处理设备；跨设备加载用 <code>map_location</code>）</li>
+<li><code>torchrun</code>、<code>torch.distributed</code>（第 3 章），backend 换成 <code>hccl</code></li>
+</ul>
+<h2 id="ch02-s3">2.3 混合精度：910B 用 BF16，910A 用 FP16<a class="hlink" href="#ch02-s3" aria-label="锚点">#</a></h2>
+<p>NPU 上的 AMP 用法与 CUDA 一致，用原生 <code>torch.autocast</code>：</p>
+<pre><code class="language-python"># 910B（推荐）：BF16，无需 loss scaling
+with torch.autocast(device_type=&quot;npu&quot;, dtype=torch.bfloat16):
+    loss = model(x, y)
+loss.backward()
+
+# 910A：只能 FP16，必须配 GradScaler 防下溢
+from torch_npu.npu.amp import GradScaler
+scaler = GradScaler()
+with torch.autocast(device_type=&quot;npu&quot;, dtype=torch.float16):
+    loss = model(x, y)
+scaler.scale(loss).backward()
+scaler.step(optimizer)
+scaler.update()
+</code></pre>
+<p>为什么 BF16 优先：BF16 与 FP32 同指数位宽，动态范围大，大模型训练<strong>不需要 loss scaling、几乎不会溢出</strong>；FP16 动态范围小，7B 以上全参训练容易 NaN（第 9 章有专门排查）。910A 不支持 BF16，属于硬件限制。</p>
+<h2 id="ch02-s4">2.4 实战：单卡训练一个迷你 GPT<a class="hlink" href="#ch02-s4" aria-label="锚点">#</a></h2>
+<p><a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/02-single-card/train_tiny_gpt.py"><code>train_tiny_gpt.py</code></a> 是一个约 300 行的<strong>零依赖</strong>（只需 torch + torch_npu）训练脚本：内置一小段唐诗语料，按字符建词表，从零训练一个 4 层的 GPT，最后生成一段「诗」。麻雀虽小，五脏俱全——模型定义、AMP、梯度裁剪、lr warmup、吞吐统计、checkpoint 保存、文本生成都有。</p>
+<pre><code class="language-bash"># 910B（默认 bf16）
+python 02-single-card/train_tiny_gpt.py
+
+# 910A
+python 02-single-card/train_tiny_gpt.py --amp fp16
+
+# 不开混合精度（对比用）
+python 02-single-card/train_tiny_gpt.py --amp off
+</code></pre>
+<p>示例输出（示意）：</p>
+<pre><code class="language-text">device=npu:0  vocab=712  params=1.82M  amp=bf16
+step   50/2000  loss 5.213  lr 3.0e-04  12.8k tok/s  peak_mem 0.4GB
+step  100/2000  loss 4.187  ...
+...
+step 2000/2000  loss 0.412  ...
+--- 生成示例 ---
+床前明月光，疑是地上霜。举头望明月，低头思故乡。
+checkpoint 已保存到 tiny_gpt.pt
+</code></pre>
+<p>训练时开另一个终端观察卡的状态：</p>
+<pre><code class="language-bash">watch -n 1 npu-smi info     # 关注 AICore(%) 利用率和 HBM-Usage
+</code></pre>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：loss 从 ~6 降到 1 以下、生成的文本明显有唐诗味、<code>npu-smi</code> 能看到你的 python 进程和显存占用。三条都满足，说明「计算、反传、优化器、显存管理」整条链路在你的环境上是好的。</p>
+</blockquote>
+<h3 id="ch02-s5">值得注意的几处代码<a class="hlink" href="#ch02-s5" aria-label="锚点">#</a></h3>
+<p>脚本里有几个 NPU 特有的写法，对应行内有注释：</p>
+<ol>
+<li><strong><code>torch.npu.set_device(idx)</code> 要在建张量之前调用</strong>——和 CUDA 一样的规矩。</li>
+<li><strong>计时必须 <code>torch.npu.synchronize()</code></strong>——NPU 执行是异步的，不同步的话你测的只是「下发时间」。</li>
+<li><strong>显存统计用 <code>torch.npu.max_memory_allocated()</code></strong>——后面章节做显存优化时天天用。</li>
+</ol>
+<h2 id="ch02-s6">2.5 两个新手必知的性能特性<a class="hlink" href="#ch02-s6" aria-label="锚点">#</a></h2>
+<p><strong>① 第一次迭代慢是正常的。</strong> NPU 算子存在「在线编译」机制（jit_compile）。910B 上配套的 CANN 默认走<strong>预编译二进制算子</strong>（jit_compile=False），首步只有少量开销；如果你观察到首步极慢或产生了 <code>kernel_meta/</code> 目录，说明走了在线编译，编译结果会缓存，第二次运行就快了。基准测试永远要先 warmup 再计时。</p>
+<pre><code class="language-python"># 显式关闭在线编译（910B + 新 CANN 通常已是默认）：
+torch_npu.npu.set_compile_mode(jit_compile=False)
+</code></pre>
+<p><strong>② 个别算子可能落到 AI CPU 或宿主 CPU。</strong> NPU 的算子覆盖度很高但不是 100%，<code>nonzero</code>、部分 int64 运算、某些花式索引可能落到慢速路径。症状是 AICore 利用率低、训练异常慢。第 7 章教你用 profiler 精确抓出这些算子，第 8 章讲替换写法。现在只需要记住：<strong>NPU 上写模型，尽量用常规算子、常规 dtype（fp16/bf16/fp32/int32）</strong>。</p>
+<h2 id="ch02-s7">2.6 练习<a class="hlink" href="#ch02-s7" aria-label="锚点">#</a></h2>
+<ol>
+<li>把 <code>--amp off / bf16</code> 各跑一遍，对比 tok/s 和 <code>peak_mem</code>，感受混合精度的收益。</li>
+<li>把 <code>n_layer</code> 从 4 改到 8、<code>block_size</code> 从 128 改到 256，观察显存变化，试着在 OOM 前找到最大能跑的配置。</li>
+<li>（910B）把脚本里的 <code>scaled_dot_product_attention</code> 换成手写的 softmax(QK^T)V 实现，对比速度——这是第 8 章融合算子优化的预告。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch03">第 3 章 · 8 卡分布式：torchrun + DDP + HCCL</a>：让 8 张卡一起干活。</p>
+
+</section>
+<section class="chapter" id="ch03">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">03</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 3 章</div>
+      <h1>8 卡分布式：torchrun + DDP + HCCL</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：理解昇腾上的分布式训练机制（HCCL），用 <code>torchrun</code> 把第 2 章的迷你 GPT 扩到 8 卡数据并行，并实测 8 卡之间的通信带宽。这一章的启动方式、环境变量、排障思路，适用于后面所有章节——LLaMA-Factory、DeepSpeed、MindSpeed 底层跑的都是同一套东西。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 2 章（单卡训练跑通）。</p>
+<h2 id="ch03-s1">3.1 概念对齐：五个名词<a class="hlink" href="#ch03-s1" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>含义</th>
+<th>8 卡单机场景下的取值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>world_size</code></td>
+<td>参与训练的进程总数</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>rank</code></td>
+<td>进程的全局编号</td>
+<td>0–7</td>
+</tr>
+<tr>
+<td><code>local_rank</code></td>
+<td>进程在本机的编号</td>
+<td>0–7（单机时等于 rank）</td>
+</tr>
+<tr>
+<td>backend</td>
+<td>集合通信后端</td>
+<td><strong><code>hccl</code></strong>（对标 NCCL）</td>
+</tr>
+<tr>
+<td>DDP</td>
+<td>DistributedDataParallel：每卡一份完整模型，反向时 AllReduce 平均梯度</td>
+<td>数据并行的标准实现</td>
+</tr>
+</tbody>
+</table></div>
+<p>工作方式一句话：<strong><code>torchrun</code> 起 8 个一模一样的进程，每个进程绑一张卡，各算各的 batch，反向传播时通过 HCCL 把梯度求平均，从而保持 8 份权重永远一致。</strong></p>
+<pre class="mermaid">flowchart LR
+    subgraph 一台 Atlas 800
+        R0[rank0&lt;br&gt;npu:0] &amp; R1[rank1&lt;br&gt;npu:1] &amp; R7[rank...7&lt;br&gt;npu:2-7]
+    end
+    R0 &lt;--&gt;|HCCL AllReduce&lt;br&gt;走机内 HCCS 高速互联| R1
+    R1 &lt;--&gt; R7
+    R0 &lt;--&gt; R7
+</pre>
+<h2 id="ch03-s2">3.2 把单卡代码改成 DDP：只需四处改动<a class="hlink" href="#ch03-s2" aria-label="锚点">#</a></h2>
+<pre><code class="language-python">import os, torch, torch_npu
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+# ① 初始化进程组：backend 用 hccl（CUDA 上是 nccl，其余完全一致）
+dist.init_process_group(backend=&quot;hccl&quot;)
+rank = dist.get_rank()
+local_rank = int(os.environ[&quot;LOCAL_RANK&quot;])   # torchrun 注入的环境变量
+
+# ② 每个进程绑定自己的卡（必须在建任何 npu 张量之前）
+torch.npu.set_device(local_rank)
+
+# ③ 模型上卡后用 DDP 包一层
+model = TinyGPT(...).npu()
+model = DDP(model, device_ids=[local_rank])
+
+# ④ 数据用 DistributedSampler 切分，保证 8 个进程拿到不同数据
+sampler = torch.utils.data.DistributedSampler(dataset)
+loader = torch.utils.data.DataLoader(dataset, sampler=sampler, ...)
+for epoch in range(epochs):
+    sampler.set_epoch(epoch)        # 别忘了，否则每个 epoch 数据顺序相同
+    ...
+</code></pre>
+<p>其余训练逻辑（AMP、裁剪、optimizer）一行不用改。<strong>打印日志、保存 checkpoint 只在 rank0 做</strong>，这是分布式代码的基本礼仪，否则 8 个进程一起写文件会互相覆盖。</p>
+<h2 id="ch03-s3">3.3 启动：torchrun 一行搞定<a class="hlink" href="#ch03-s3" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"># 8 卡单机启动（本章脚本已封装成 run_ddp_8npu.sh）
+torchrun --nproc_per_node=8 --master_port=29500 ddp_tiny_gpt.py
+
+# 只用部分卡：用 ASCEND_RT_VISIBLE_DEVICES 控制（对标 CUDA_VISIBLE_DEVICES）
+ASCEND_RT_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node=4 ddp_tiny_gpt.py
+</code></pre>
+<p>跑本章的完整示例：</p>
+<pre><code class="language-bash">bash 03-multi-card-ddp/run_ddp_8npu.sh
+</code></pre>
+<p>示例输出（示意）：</p>
+<pre><code class="language-text">[rank0] world_size=8  device=npu:0  params=1.82M  amp=bf16
+[rank0] epoch 1 | step   50 | loss 4.83 | global 96.4k tok/s (12.1k tok/s/卡)
+[rank0] epoch 2 | step  100 | loss 3.19 | global 97.0k tok/s
+...
+[rank0] 训练完成, checkpoint 已保存到 tiny_gpt_ddp.pt
+</code></pre>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：对比第 2 章的单卡 tok/s，8 卡 global 吞吐应达到单卡的 <strong>6.5–7.8 倍</strong>（小模型通信占比高，达不到 8 倍满线性是正常的；7B 级模型 DDP 线性度通常更好）。同时 <code>npu-smi info</code> 应显示 8 张卡都有进程、显存占用相近。</p>
+</blockquote>
+<h2 id="ch03-s4">3.4 实测 8 卡通信带宽<a class="hlink" href="#ch03-s4" aria-label="锚点">#</a></h2>
+<p>分布式训练性能 = 计算 + 通信。先给你的机器测个底，以后遇到「多卡比单卡还慢」的问题时有基线可对比：</p>
+<pre><code class="language-bash">torchrun --nproc_per_node=8 03-multi-card-ddp/allreduce_bench.py
+</code></pre>
+<p>示例输出（示意，数值因机型/版本而异）：</p>
+<pre><code class="language-text">world_size=8  backend=hccl  dtype=float32
+      size      time/iter      algbw       busbw
+    4.0 MB       0.21 ms     19.8 GB/s    34.6 GB/s
+   64.0 MB       1.95 ms     34.3 GB/s    60.1 GB/s
+  256.0 MB       7.21 ms     37.2 GB/s    65.0 GB/s
+ 1024.0 MB      28.55 ms     37.6 GB/s    65.8 GB/s
+</code></pre>
+<p>怎么读：</p>
+<ul>
+<li><strong>algbw</strong>（算法带宽）= 数据量 / 时间；<strong>busbw</strong>（总线带宽）= algbw × 2(n-1)/n，反映硬件链路的实际压力，用于跨机型比较。</li>
+<li>单机 8 卡走 <strong>HCCS</strong> 互联，大包 busbw 应达到几十 GB/s 量级且随包变大趋于饱和。如果大包带宽也只有个位数 GB/s，说明拓扑或环境有问题（去第 9 章）。</li>
+<li>小包带宽低是正常的（延迟主导）。这就是为什么 DDP 要把梯度攒成 bucket 再通信（默认 25MB，第 8 章会调它）。</li>
+</ul>
+<p>CANN 还自带更专业的压测工具 <code>hccl_test</code>（在 <code>$ASCEND_TOOLKIT_HOME/tools/hccl_test</code>，需要 MPI 编译），做机器验收时可以用它跑全套 collective 基准；日常用本章的 python 脚本够了。</p>
+<h2 id="ch03-s5">3.5 HCCL 的几个关键环境变量<a class="hlink" href="#ch03-s5" aria-label="锚点">#</a></h2>
+<p>现在先知道存在，排障细节在第 9 章：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>默认</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HCCL_CONNECT_TIMEOUT</code></td>
+<td>120（秒）</td>
+<td>建链超时。进程组很大或启动慢时调大</td>
+</tr>
+<tr>
+<td><code>HCCL_EXEC_TIMEOUT</code></td>
+<td>1836（秒）</td>
+<td>通信等待超时。<strong>8 卡里有一个 rank 卡住/变慢，其他 7 个会在这个时间后报错退出</strong>——看到 HCCL timeout 报错，真凶通常是没报错的那个 rank</td>
+</tr>
+<tr>
+<td><code>HCCL_BUFFSIZE</code></td>
+<td>200（MB）</td>
+<td>HCCL 通信缓冲区大小</td>
+</tr>
+<tr>
+<td><code>HCCL_DETERMINISTIC</code></td>
+<td>false</td>
+<td>设为 <code>true</code> 使归约顺序确定（复现实验用，略降性能）</td>
+</tr>
+<tr>
+<td><code>ASCEND_RT_VISIBLE_DEVICES</code></td>
+<td>全部</td>
+<td>控制进程可见的卡</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch03-s6">3.6 常见坑<a class="hlink" href="#ch03-s6" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起了 8 个进程全挤在 npu:0，显存爆</td>
+<td>忘了 <code>torch.npu.set_device(local_rank)</code>，或在 set_device 之前就建了张量</td>
+</tr>
+<tr>
+<td><code>Address already in use</code></td>
+<td>上一次训练的进程没死干净：<code>pkill -9 -f ddp_tiny_gpt</code>；或换 <code>--master_port</code></td>
+</tr>
+<tr>
+<td>卡住不动，最后 HCCL timeout</td>
+<td>某个 rank 先挂了或走了不同分支（如只有 rank0 做 eval 而其他 rank 在等 AllReduce）。保证<strong>所有 rank 执行相同的集合通信序列</strong></td>
+</tr>
+<tr>
+<td>每个 epoch loss 曲线一样</td>
+<td>忘了 <code>sampler.set_epoch(epoch)</code></td>
+</tr>
+<tr>
+<td>Ctrl-C 后再启动报设备占用</td>
+<td>残留进程还占着卡：<code>npu-smi info</code> 看进程，<code>kill -9</code> 之，几秒后显存自动释放</td>
+</tr>
+<tr>
+<td>8 卡吞吐远低于单卡×8</td>
+<td>小模型正常；大模型不正常，去第 7 章 profile 通信占比</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch03-s7">3.7 练习<a class="hlink" href="#ch03-s7" aria-label="锚点">#</a></h2>
+<ol>
+<li>分别用 1/2/4/8 卡跑 <code>ddp_tiny_gpt.py</code>（改 <code>--nproc_per_node</code>），画出吞吐-卡数曲线，计算并行效率。</li>
+<li>把 <code>allreduce_bench.py</code> 的 dtype 换成 <code>float16</code> 再测一遍，思考为什么梯度通信量减半对训练意味着什么（第 8 章 DDP fp16 梯度压缩会呼应）。</li>
+<li>故意在 rank0 上 <code>time.sleep(30)</code> 模拟慢节点，观察其他 rank 多久后报什么错——这个错误信息以后你会经常见到，提前认识它。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch04">第 4 章 · 实战一：8 卡 LoRA 微调 Qwen</a>：训练真正的大模型。</p>
+
+</section>
+<section class="chapter" id="ch04">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">04</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 4 章</div>
+      <h1>实战一：8 卡 LoRA 微调 Qwen</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：在 8 张 910 上用 LoRA 微调一个 7B 对话模型（以 Qwen2.5-7B-Instruct 为例），走两条路线：<strong>路线 A</strong> 用 LLaMA-Factory（改配置就能跑，推荐首选）；<strong>路线 B</strong> 用 transformers + PEFT 手写（理解原理、便于深度定制）。做完本章你就拥有第一个「自己的模型」。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 3 章；磁盘至少留 50GB（模型权重 + checkpoint）。</p>
+<h2 id="ch04-s1">4.1 为什么从 LoRA 开始<a class="hlink" href="#ch04-s1" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>LoRA 微调 7B</th>
+<th>全参微调 7B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练的参数量</td>
+<td>~0.3%（几十 M）</td>
+<td>100%（7B）</td>
+</tr>
+<tr>
+<td>单卡显存需求（bf16 + 梯度检查点）</td>
+<td>~20GB，<strong>单卡就能跑</strong></td>
+<td>权重+梯度+优化器 ≈ 112GB，必须多卡切分</td>
+</tr>
+<tr>
+<td>8 卡的用法</td>
+<td>数据并行，纯加速</td>
+<td>ZeRO 切分（第 5 章）</td>
+</tr>
+<tr>
+<td>适合</td>
+<td>风格/领域/指令定制</td>
+<td>深度改变模型能力</td>
+</tr>
+</tbody>
+</table></div>
+<p>LoRA 冻结原模型，只训练插入的低秩矩阵，显存瓶颈没了，8 张卡全部用于加速。<strong>910B（64GB）单卡即可训 7B LoRA，8 卡把时间除以 ~7；910A（32GB）也能跑，但要 fp16 + 更小 batch。</strong></p>
+<h2 id="ch04-s2">4.2 准备：下载模型和数据<a class="hlink" href="#ch04-s2" aria-label="锚点">#</a></h2>
+<p>国内网络直连 HuggingFace 慢/不通，两个方案任选：</p>
+<pre><code class="language-bash"># 方案一：ModelScope（推荐，国内速度快）
+pip install modelscope
+modelscope download --model Qwen/Qwen2.5-7B-Instruct --local_dir ./models/Qwen2.5-7B-Instruct
+
+# 方案二：HF 镜像
+export HF_ENDPOINT=https://hf-mirror.com
+pip install -U huggingface_hub
+huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir ./models/Qwen2.5-7B-Instruct
+</code></pre>
+<p>下文所有 <code>model_name_or_path</code> 都填本地路径 <code>./models/Qwen2.5-7B-Instruct</code>（也可以直接填仓库名让框架在线下载）。</p>
+<h2 id="ch04-s3">4.3 路线 A：LLaMA-Factory（推荐）<a class="hlink" href="#ch04-s3" aria-label="锚点">#</a></h2>
+<p>LLaMA-Factory 官方支持昇腾 NPU，SFT/LoRA/DPO/PPO 全流程开箱即用。</p>
+<h3 id="ch04-s4">安装<a class="hlink" href="#ch04-s4" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash">git clone --depth 1 https://github.com/hiyouga/LLaMA-Factory.git
+cd LLaMA-Factory
+# [torch-npu] extra 会带上 torch_npu 相关依赖；已按第 1 章装好 torch/torch_npu 的话也没冲突
+pip install -e &quot;.[torch-npu,metrics]&quot;
+
+# 验证它认到了 NPU
+llamafactory-cli env
+# 期望输出里有: PyTorch version: 2.5.1 ... NPU type: Ascend910B1 之类的字样
+</code></pre>
+<h3 id="ch04-s5">训练配置<a class="hlink" href="#ch04-s5" aria-label="锚点">#</a></h3>
+<p>本章提供了现成的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/04-lora-finetune/qwen2_5_7b_lora_sft_npu.yaml"><code>qwen2_5_7b_lora_sft_npu.yaml</code></a>，用的是 LLaMA-Factory 自带的两个演示数据集（<code>identity</code> 身份认知 + <code>alpaca_zh_demo</code> 中文指令）。想换成自己的数据：把 alpaca 格式的 json 放进 <code>LLaMA-Factory/data/</code>，在 <code>data/dataset_info.json</code> 里注册一个名字，然后改 yaml 里的 <code>dataset:</code> 字段即可。</p>
+<p>关键参数解读（完整文件见 yaml）：</p>
+<pre><code class="language-yaml">finetuning_type: lora
+lora_rank: 8            # 低秩矩阵的秩。8~64 常用；越大可塑性越强、也越容易过拟合
+lora_target: all        # 对所有线性层插 LoRA（比只插 q/v 效果更稳）
+cutoff_len: 2048        # 序列截断长度，显存的主要调节旋钮之一
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 4   # 全局 batch = 2 × 8卡 × 4 = 64
+learning_rate: 1.0e-4   # LoRA 常用 1e-4 ~ 2e-4（比全参大一个数量级）
+bf16: true              # 910B 用 bf16；910A 改成 fp16: true
+</code></pre>
+<h3 id="ch04-s6">8 卡启动<a class="hlink" href="#ch04-s6" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash">cd LLaMA-Factory
+cp ../hw910_llm_course/04-lora-finetune/qwen2_5_7b_lora_sft_npu.yaml .
+
+# FORCE_TORCHRUN=1 强制走 torchrun 多进程（8 卡数据并行）
+ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 FORCE_TORCHRUN=1 \
+  llamafactory-cli train qwen2_5_7b_lora_sft_npu.yaml
+</code></pre>
+<p>训练开始后另开终端 <code>watch -n 1 npu-smi info</code>，8 张卡的 AICore 利用率都应该持续在高位。示例日志（示意）：</p>
+<pre><code class="language-text">[INFO] trainable params: 20,185,088 || all params: 7,635,801,600 || trainable%: 0.26
+{'loss': 1.8342, 'learning_rate': 9.8e-05, 'epoch': 0.21}
+{'loss': 1.2917, 'learning_rate': 8.9e-05, 'epoch': 0.42}
+...
+Training completed. saved to saves/qwen2.5-7b/lora/sft
+</code></pre>
+<h3 id="ch04-s7">验证效果 + 合并导出<a class="hlink" href="#ch04-s7" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash"># 命令行对话（加载 base + LoRA adapter）
+llamafactory-cli chat --model_name_or_path ./models/Qwen2.5-7B-Instruct \
+  --adapter_name_or_path saves/qwen2.5-7b/lora/sft --template qwen
+
+# 确认满意后，把 LoRA 合并回主干权重，得到可独立部署的完整模型（第 10 章要用）
+llamafactory-cli export --model_name_or_path ./models/Qwen2.5-7B-Instruct \
+  --adapter_name_or_path saves/qwen2.5-7b/lora/sft \
+  --template qwen --export_dir ./models/qwen2.5-7b-sft-merged
+</code></pre>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：用 <code>identity</code> 数据集训练后，问它「你是谁」应回答配置的自定义身份而不是「我是通义千问」——这是微调生效最直观的证据。</p>
+</blockquote>
+<h2 id="ch04-s8">4.4 路线 B：transformers + PEFT 手写<a class="hlink" href="#ch04-s8" aria-label="锚点">#</a></h2>
+<p>想理解 LoRA 微调内部发生了什么、或需要自定义数据管道/损失函数，看本章的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/04-lora-finetune/hf_peft_lora_sft.py"><code>hf_peft_lora_sft.py</code></a>（约 200 行，只依赖 transformers/peft）。它做了五件事，每件都有注释：</p>
+<ol>
+<li>加载 tokenizer 和 bf16 权重到 NPU；</li>
+<li>用 <strong>chat template</strong> 把 alpaca 格式样本转成训练文本，且<strong>只对回答部分计算 loss</strong>（prompt 部分 label = -100）；</li>
+<li><code>LoraConfig(target_modules=&quot;all-linear&quot;)</code> 注入 LoRA；</li>
+<li>开梯度检查点（<code>gradient_checkpointing_enable</code> + <code>enable_input_require_grads</code>）；</li>
+<li>交给 <code>Trainer</code>——它检测到 torchrun 环境会自动做 DDP，<strong>代码里没有任何分布式逻辑</strong>。</li>
+</ol>
+<pre><code class="language-bash"># 单卡冒烟（内置 32 条演示数据，几分钟跑完）
+python 04-lora-finetune/hf_peft_lora_sft.py --model ./models/Qwen2.5-7B-Instruct
+
+# 8 卡 + 自己的数据
+bash 04-lora-finetune/run_hf_lora_8npu.sh --data my_data.json
+</code></pre>
+<p>自有数据格式（alpaca 风格的 json 数组）：</p>
+<pre><code class="language-json">[
+  {&quot;instruction&quot;: &quot;把下面的句子翻译成英文&quot;, &quot;input&quot;: &quot;今天天气很好&quot;, &quot;output&quot;: &quot;The weather is nice today.&quot;},
+  {&quot;instruction&quot;: &quot;你是谁?&quot;, &quot;input&quot;: &quot;&quot;, &quot;output&quot;: &quot;我是由 XX 团队训练的助手小X。&quot;}
+]
+</code></pre>
+<h2 id="ch04-s9">4.5 910A 及低显存场景的调整<a class="hlink" href="#ch04-s9" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>调整项</th>
+<th>路线 A（yaml）</th>
+<th>路线 B（脚本参数）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BF16 → FP16</td>
+<td><code>bf16: true</code> 改 <code>fp16: true</code></td>
+<td><code>--fp16</code></td>
+</tr>
+<tr>
+<td>降序列长度</td>
+<td><code>cutoff_len: 1024</code></td>
+<td><code>--cutoff-len 1024</code></td>
+</tr>
+<tr>
+<td>降 batch + 补累积</td>
+<td><code>per_device_train_batch_size: 1</code> + 调大累积</td>
+<td><code>--batch-size 1</code></td>
+</tr>
+<tr>
+<td>还不够</td>
+<td>加 <code>deepspeed: examples/deepspeed/ds_z3_config.json</code>（ZeRO-3 把 14GB 权重切到 8 卡）</td>
+<td>见第 5 章</td>
+</tr>
+</tbody>
+</table></div>
+<p>关于 <strong>QLoRA</strong>（4bit 量化底座 + LoRA）：其核心依赖 bitsandbytes 对 NPU 的支持仍在演进中，昇腾上成熟度一般。8×910 的显存跑 7B/14B LoRA 并不紧张，建议优先 LoRA + 上表手段，不必强上 QLoRA。</p>
+<h2 id="ch04-s10">4.6 常见坑<a class="hlink" href="#ch04-s10" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>下载模型卡住/超时</td>
+<td>用 4.2 的 ModelScope 或 HF 镜像；LLaMA-Factory 可加 <code>USE_MODELSCOPE_HUB=1</code> 直接从 ModelScope 拉</td>
+</tr>
+<tr>
+<td>启动即 OOM</td>
+<td>先降 <code>cutoff_len</code> 和 batch size（最有效）；确认开了梯度检查点；再不行上 ZeRO-3</td>
+</tr>
+<tr>
+<td>报 flash_attn / fa2 相关错误</td>
+<td>NPU 上没有 CUDA 版 FlashAttention，配置里 <code>flash_attn: auto</code>（默认）或 <code>sdpa</code> 即可，别强设 <code>fa2</code></td>
+</tr>
+<tr>
+<td>loss 一直不降</td>
+<td>检查 template 是否和模型匹配（Qwen 用 <code>qwen</code>）；学习率是否过小；数据是否被 <code>max_samples</code> 截得太少</td>
+</tr>
+<tr>
+<td>fp16 下 loss 变 NaN（910A）</td>
+<td>学习率减半、<code>max_grad_norm: 0.5</code>；参考第 9 章溢出排查</td>
+</tr>
+<tr>
+<td>8 卡但速度和单卡差不多</td>
+<td>确认日志里 world_size=8（<code>FORCE_TORCHRUN=1</code> 有没有加）；<code>npu-smi</code> 看是不是只有 1 张卡在干活</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch04-s11">4.7 练习<a class="hlink" href="#ch04-s11" aria-label="锚点">#</a></h2>
+<ol>
+<li>造 50 条「自我认知」数据（&quot;你是谁&quot;→ 你设定的身份），微调后验证模型改口了。</li>
+<li>对比 <code>lora_rank: 8</code> 与 <code>64</code> 的训练速度、显存、效果差异。</li>
+<li>用 <code>llamafactory-cli webui</code> 起图形界面，把本章流程在网页里点一遍（它生成的命令与 yaml 是同一套东西）。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch05">第 5 章 · 实战二：DeepSpeed ZeRO 全参训练</a>：LoRA 满足不了的时候，上全参。</p>
+
+</section>
+<section class="chapter" id="ch05">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">05</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 5 章</div>
+      <h1>实战二：DeepSpeed ZeRO 全参训练</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：理解全参训练的显存账，学会用 DeepSpeed ZeRO 在 8 张 910 上全参微调 7B 级模型，并知道模型再大时该怎么升级方案（ZeRO-3、offload，或第 6 章的张量并行）。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 4 章（模型/数据已就位，跑通过 8 卡训练）。</p>
+<h2 id="ch05-s1">5.1 先算账：全参训练的显存都花在哪<a class="hlink" href="#ch05-s1" aria-label="锚点">#</a></h2>
+<p>混合精度 + AdamW 下，<strong>每个参数</strong>需要的「模型状态」显存：</p>
+<pre><code class="language-text">bf16 权重 2B + bf16 梯度 2B + fp32 主权重 4B + fp32 动量 4B + fp32 方差 4B = 16 字节/参数
+</code></pre>
+<p>7B 模型 → <strong>112GB</strong>，还没算激活值。单卡 64GB 装不下——这就是普通 DDP（每卡一份完整状态）跑不了全参 7B 的原因，也是 ZeRO 存在的意义：<strong>把这三样东西切开，8 张卡各存 1/8</strong>。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ZeRO 阶段</th>
+<th>切分内容</th>
+<th>7B 每卡模型状态</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZeRO-0（=DDP）</td>
+<td>不切</td>
+<td>112 GB ❌</td>
+<td>通信最少</td>
+</tr>
+<tr>
+<td>ZeRO-1</td>
+<td>优化器状态</td>
+<td>4 + 84/8 ≈ <strong>14.5 GB</strong></td>
+<td>几乎无额外通信</td>
+</tr>
+<tr>
+<td>ZeRO-2</td>
+<td>+ 梯度</td>
+<td>2 + 98/8 ≈ <strong>14.3 GB</strong>（梯度即切即释）</td>
+<td>常用甜点位</td>
+</tr>
+<tr>
+<td>ZeRO-3</td>
+<td>+ 参数本身</td>
+<td>112/8 = <strong>14 GB</strong></td>
+<td>参数用时聚合，多 ~50% 通信量</td>
+</tr>
+<tr>
+<td>ZeRO-3 + offload</td>
+<td>状态放 CPU 内存</td>
+<td>更少</td>
+<td>显存最省，速度明显下降</td>
+</tr>
+</tbody>
+</table></div>
+<p>加上激活值（梯度检查点后 7B/2k 序列每卡约几 GB），结论：<strong>8×64GB 上全参 7B 用 ZeRO-1/2 很宽裕；8×32GB（910A）则需要 ZeRO-2/3 + 小 batch。</strong></p>
+<p>选型速查（8 卡 910B 64GB，全参 SFT，开梯度检查点）：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>模型规模</th>
+<th>推荐配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>≤ 7B</td>
+<td><strong>ZeRO-2</strong>（<a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/05-full-finetune-deepspeed/ds_zero2.json"><code>ds_zero2.json</code></a>）</td>
+</tr>
+<tr>
+<td>13B/14B</td>
+<td><strong>ZeRO-3</strong>（<a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/05-full-finetune-deepspeed/ds_zero3.json"><code>ds_zero3.json</code></a>）</td>
+</tr>
+<tr>
+<td>32B</td>
+<td>ZeRO-3 + 激活检查点全开，临界；不行加 optimizer offload（<a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/05-full-finetune-deepspeed/ds_zero3_offload.json"><code>ds_zero3_offload.json</code></a>）</td>
+</tr>
+<tr>
+<td>≥ 70B</td>
+<td>单机全参不现实：用 LoRA（第 4 章）或多机 + 第 6 章方案</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch05-s2">5.2 DeepSpeed 在 NPU 上的安装与验证<a class="hlink" href="#ch05-s2" aria-label="锚点">#</a></h2>
+<p>新版 DeepSpeed 通过「accelerator 抽象」原生支持昇腾：装好 torch_npu 后直接 <code>pip install deepspeed</code>，它会自动探测到 NPU。</p>
+<pre><code class="language-bash">pip install deepspeed    # 版本兼容性以 LLaMA-Factory/torch_npu 文档推荐为准
+
+ds_report
+# 关键看这一行:
+#   accelerator: npu        &lt;- 出现 npu 说明探测成功
+# NPU 上各类 CUDA fused op builder 显示 [NO] 是正常的，不影响 ZeRO 使用
+</code></pre>
+<h2 id="ch05-s3">5.3 跑起来：Trainer + ZeRO-2 全参微调 7B<a class="hlink" href="#ch05-s3" aria-label="锚点">#</a></h2>
+<p>本章的 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/05-full-finetune-deepspeed/train_sft_trainer.py"><code>train_sft_trainer.py</code></a> 与第 4 章路线 B 几乎相同，差异只有两点：<strong>不注入 LoRA（全参可训）</strong>、<strong>TrainingArguments 里传入 <code>--deepspeed</code> 配置文件</strong>。Trainer 会接管 DeepSpeed 引擎的初始化、ZeRO 切分和 checkpoint 保存。</p>
+<pre><code class="language-bash"># 8 卡 ZeRO-2 全参微调（默认配置）
+bash 05-full-finetune-deepspeed/run_deepspeed_8npu.sh --data my_data.json
+
+# 换 ZeRO-3
+DS_CONFIG=ds_zero3.json bash 05-full-finetune-deepspeed/run_deepspeed_8npu.sh --data my_data.json
+</code></pre>
+<p>启动本质上就是 torchrun 传配置：</p>
+<pre><code class="language-bash">torchrun --nproc_per_node=8 train_sft_trainer.py \
+    --model ./models/Qwen2.5-7B-Instruct --data my_data.json \
+    --deepspeed ds_zero2.json --lr 1e-5
+</code></pre>
+<blockquote class="callout"><p>全参微调学习率要比 LoRA <strong>小一个数量级</strong>（1e-5 ~ 2e-5），这是新手最常翻车的参数。</p>
+</blockquote>
+<p>训练中观察显存验证 ZeRO 生效：<code>npu-smi info</code> 里每卡 HBM 占用应远小于 112GB 的 1/1（ZeRO-2 下 7B 每卡 20~35GB 量级）。示例日志（示意）：</p>
+<pre><code class="language-text">[INFO] DeepSpeed info: version=0.16.x, git-hash=unknown
+[INFO] rank0: Detected accelerator: npu
+{'loss': 1.612, 'grad_norm': 3.1, 'learning_rate': 9.6e-06, 'epoch': 0.3}
+...
+</code></pre>
+<h2 id="ch05-s4">5.4 配置文件精读<a class="hlink" href="#ch05-s4" aria-label="锚点">#</a></h2>
+<p>三个 json 已按「与 Trainer 集成」的最佳实践写好：能填 <code>&quot;auto&quot;</code> 的都填 <code>&quot;auto&quot;</code>（batch、精度、梯度裁剪等以命令行/TrainingArguments 为准，避免两处配置打架），需要理解的旋钮就这几个：</p>
+<pre><code class="language-jsonc">&quot;zero_optimization&quot;: {
+  &quot;stage&quot;: 2,
+  &quot;overlap_comm&quot;: true,          // 通信与反向计算重叠，基本必开
+  &quot;contiguous_gradients&quot;: true,  // 梯度连续存放，减碎片
+  &quot;reduce_bucket_size&quot;: 5e8      // 通信桶大小(元素数)。OOM 时可调小换显存
+}
+</code></pre>
+<p>ZeRO-3 额外两个：</p>
+<pre><code class="language-jsonc">&quot;stage3_prefetch_bucket_size&quot;: &quot;auto&quot;,              // 参数预取，隐藏 all-gather 延迟
+&quot;stage3_gather_16bit_weights_on_model_save&quot;: true   // 保存时聚合成完整权重(见 5.5)
+</code></pre>
+<p>offload 版把优化器状态挪到 CPU 内存：显存大省、速度受 CPU 和 PCIe 限制明显下降，<strong>是「跑不下」时的手段，不是性能优化</strong>。用它之前确认机器内存足够（7B 优化器状态 84GB + 余量）。</p>
+<h2 id="ch05-s5">5.5 ZeRO-3 的 checkpoint 有点特别<a class="hlink" href="#ch05-s5" aria-label="锚点">#</a></h2>
+<p>ZeRO-3 下每卡只有 1/8 参数，保存时有两种结果：</p>
+<ul>
+<li>配置里 <code>stage3_gather_16bit_weights_on_model_save: true</code>（本章默认）：保存时自动聚合出<strong>完整 bf16 权重</strong>，<code>output_dir</code> 里就是标准 HF 格式，直接能部署。代价是保存变慢、rank0 峰值内存变高。</li>
+<li>若关掉：得到的是分片的 ZeRO checkpoint，用 DeepSpeed 附带的 <code>zero_to_fp32.py output_dir merged.safetensors</code> 离线合并。</li>
+</ul>
+<p>大模型保存一次可能要几分钟，<strong>期间其他 rank 在等待</strong>——把 <code>ddp_timeout</code>（脚本已设）调大，避免保存时触发 HCCL 超时误报。</p>
+<h2 id="ch05-s6">5.6 FSDP：另一条全参路线（简述）<a class="hlink" href="#ch05-s6" aria-label="锚点">#</a></h2>
+<p>PyTorch 原生 FSDP 在 torch_npu 上同样可用，效果与 ZeRO-3 同级。已经在用 accelerate 的项目可以直接：</p>
+<pre><code class="language-bash">accelerate config   # distributed_type 选 MULTI_NPU, 再选 FSDP, auto wrap 填 TRANSFORMER_BASED_WRAP
+accelerate launch --num_processes 8 your_train.py
+</code></pre>
+<p>两条路线怎么选：<strong>用 HF Trainer/LLaMA-Factory 生态 → DeepSpeed 配置文件最省事（本章）；纯 PyTorch 自研训练循环 → FSDP 少一个依赖。</strong> 性能上单机 8 卡两者差距通常在几个百分点内，不必纠结。</p>
+<h2 id="ch05-s7">5.7 常见坑<a class="hlink" href="#ch05-s7" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ds_report</code> 没显示 npu</td>
+<td>torch_npu 没装好或没在同一环境；先回第 1 章体检</td>
+</tr>
+<tr>
+<td>加载模型阶段就 OOM（ZeRO-3）</td>
+<td>确认 deepspeed 配置在 <code>from_pretrained</code> 之前已传给 Trainer（本章脚本顺序正确）；HF 会用 zero.Init 边加载边切分</td>
+</tr>
+<tr>
+<td>训练稳定但 eval/保存时 OOM</td>
+<td>eval batch 调小；保存时聚合权重的峰值见 5.5，可改离线合并</td>
+</tr>
+<tr>
+<td>fp16 溢出 NaN（910A）</td>
+<td>ds 配置 fp16 段已启用动态 loss scale；仍 NaN 则降 lr、看第 9 章</td>
+</tr>
+<tr>
+<td>offload 后 CPU 100%、速度骤降</td>
+<td>正常代价。确认真的需要 offload；优先试 ZeRO-3 不 offload + 更小 micro batch</td>
+</tr>
+<tr>
+<td>保存 checkpoint 时 HCCL 超时</td>
+<td>调大 <code>ddp_timeout</code>（脚本默认 3000 秒）；checkpoint 放本地盘而不是慢速 NFS</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch05-s8">5.8 练习<a class="hlink" href="#ch05-s8" aria-label="锚点">#</a></h2>
+<ol>
+<li>用 ZeRO-1/2/3 各跑同一任务 100 步，记录每卡峰值显存（脚本会打印）和吞吐，验证 5.1 的表。</li>
+<li>7B 全参 + ZeRO-2 下把 micro batch 从 1 逐步加大到 OOM，找出你机器的最大值；再开 offload 看能大多少。</li>
+<li>把第 4 章 LoRA 与本章全参在同一批数据上训练，对比 loss 曲线和下游效果，体会两者的适用差异。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch06">第 6 章 · 实战三：MindSpeed 预训练</a>：数据并行到头了，该上张量并行/流水并行了。</p>
+
+</section>
+<section class="chapter" id="ch06">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">06</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 6 章</div>
+      <h1>实战三：MindSpeed 预训练（TP/PP/SP）</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：理解张量并行/流水并行等 Megatron 式并行手段，在 8 张 910 上用 <strong>MindSpeed-LLM</strong>（Megatron-LM 的昇腾适配套件）跑通一次预训练，并掌握 8 卡下并行策略的选法。这是三条路线里上限最高的一条：预训练、超长序列、未来扩多机、追求极致 MFU 都靠它。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 3 章（分布式概念）；第 5 章（显存账）读过会很有帮助。</p>
+<h2 id="ch06-s1">6.1 为什么 ZeRO 之外还需要 TP/PP<a class="hlink" href="#ch06-s1" aria-label="锚点">#</a></h2>
+<p>ZeRO 是<strong>数据并行</strong>的省显存版：切的是「模型状态的存储」，但每卡仍要执行完整模型的计算、激活值也基本完整。两种情况会顶到天花板：</p>
+<ol>
+<li><strong>单层都放不下/激活太大</strong>：几十 B 模型、或 32K+ 长序列，单卡连一层的激活都紧张；</li>
+<li><strong>ZeRO-3 通信代价</strong>：参数即用即取，模型越大通信越重。</li>
+</ol>
+<p>Megatron 体系给出另外两个维度（可与数据并行叠加）：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>并行方式</th>
+<th>切什么</th>
+<th>通信特点</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TP</strong> 张量并行</td>
+<td>把每个矩阵乘按行/列切到多卡</td>
+<td>每层都要 AllReduce，<strong>通信极频繁</strong>，只适合机内高速互联</td>
+<td>模型宽、单层放不下</td>
+</tr>
+<tr>
+<td><strong>PP</strong> 流水并行</td>
+<td>按层切成多段，卡间接力</td>
+<td>只传层间激活，通信少但有「流水线气泡」</td>
+<td>模型深、跨机友好</td>
+</tr>
+<tr>
+<td><strong>SP</strong> 序列并行</td>
+<td>配合 TP 把 LayerNorm/Dropout 的激活按序列切</td>
+<td>与 TP 绑定使用</td>
+<td>开 TP 时基本必开</td>
+</tr>
+<tr>
+<td><strong>CP</strong> 上下文并行</td>
+<td>把超长序列切到多卡算注意力</td>
+<td>Ring/Ulysses 等</td>
+<td>32K+ 长序列训练</td>
+</tr>
+</tbody>
+</table></div>
+<p>三者关系：<code>world_size = TP × PP × DP</code>。8 卡单机的组合空间就是 <code>TP ∈ {1,2,4,8} × PP ∈ {1,2,4,8}</code>，乘积 ≤ 8，剩下的维度自动成为 DP。</p>
+<p><strong>8 卡单机选型经验法则</strong>（从上往下试，能跑就停）：</p>
+<ol>
+<li><strong>能纯 DP 就纯 DP</strong>：<code>TP1·PP1·DP8</code> + 分布式优化器（等效 ZeRO-1）+ 重计算。7B/4K 序列在 64GB 卡上通常可行，通信最少、吞吐最高。</li>
+<li><strong>显存不够 → 加 TP</strong>：<code>TP2·PP1·DP4</code> → <code>TP4·PP1·DP2</code>。910 机内 HCCS 带宽高，TP 开销可接受；<strong>开 TP 时同时开 <code>--sequence-parallel</code></strong>。</li>
+<li><strong>13B~32B 或长序列</strong>：<code>TP4·PP2</code> / <code>TP8·PP1</code>。</li>
+<li><strong>PP 在单机的价值有限</strong>（气泡浪费），优先 TP；PP 主要为将来扩多机预留（跨机 PP、机内 TP 是标准姿势）。</li>
+</ol>
+<h2 id="ch06-s2">6.2 MindSpeed 全家桶是什么关系<a class="hlink" href="#ch06-s2" aria-label="锚点">#</a></h2>
+<ul>
+<li><strong>Megatron-LM</strong>：NVIDIA 的预训练框架（上游，CUDA 语境）。</li>
+<li><strong>MindSpeed</strong>：昇腾的「Megatron 补丁包」——<code>import mindspeed.megatron_adaptor</code> 一行，把 Megatron 的 CUDA 调用替换成 NPU 实现，并带来一批昇腾专属优化（融合算子、MC2 通算融合、自适应重计算、swap-attention 等）。</li>
+<li><strong>MindSpeed-LLM</strong>：在前两者之上的「模型套件」——Qwen/LLaMA/GLM/DeepSeek 等主流模型的<strong>现成配置脚本</strong>、HF↔Megatron <strong>权重互转</strong>、数据预处理、SFT/LoRA/DPO 支持。</li>
+</ul>
+<blockquote class="callout q-warn"><p>⚠️ <strong>版本三角必须按官方说明锁定</strong>：MindSpeed-LLM 的每个分支都指明了配套的 Megatron-LM commit/tag 和 MindSpeed commit。<strong>不要各拉各的最新版</strong>，三者不配套是本章报错的头号来源。安装脚本 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/06-pretrain-mindspeed/setup_mindspeed_llm.sh"><code>setup_mindspeed_llm.sh</code></a> 里把版本集中成了三个变量，改动前先查你检出分支的 README。</p>
+</blockquote>
+<pre><code class="language-bash">bash 06-pretrain-mindspeed/setup_mindspeed_llm.sh   # 拉取三个仓库并安装
+</code></pre>
+<h2 id="ch06-s3">6.3 数据准备：从 jsonl 到 .bin/.idx<a class="hlink" href="#ch06-s3" aria-label="锚点">#</a></h2>
+<p>Megatron 预训练不吃原始文本，要先离线 tokenize 成二进制索引格式（训练时零 tokenize 开销，这本身就是重要的性能设计）：</p>
+<pre><code class="language-bash"># 原始数据: 每行一个 json, 内容在 &quot;text&quot; 字段
+# {&quot;text&quot;: &quot;第一篇文档的全文……&quot;}
+bash 06-pretrain-mindspeed/preprocess_data.sh \
+    INPUT=./raw/corpus.jsonl TOKENIZER=./models/Qwen2.5-7B OUTPUT_PREFIX=./dataset/corpus
+# 产物: ./dataset/corpus_text_document.bin / .idx
+</code></pre>
+<p>训练脚本里 <code>--data-path</code> 填<strong>前缀</strong> <code>./dataset/corpus_text_document</code>（不带 .bin/.idx），这是新手常错点。</p>
+<p>**续训（continue pre-training）**还需要把 HF 权重转成 Megatron 分片格式（转换时就要指定目标 TP/PP）：</p>
+<pre><code class="language-bash"># 在 MindSpeed-LLM 目录下, 以 qwen2.5 为例（脚本名以你检出的版本为准）
+bash examples/mcore/qwen25/ckpt_convert_qwen25_hf2mcore.sh   # 内部是 convert_ckpt.py
+</code></pre>
+<p>从零预训练则跳过权重转换，随机初始化直接开训。</p>
+<h2 id="ch06-s4">6.4 跑起来：8 卡预训练 Qwen2.5-7B 结构<a class="hlink" href="#ch06-s4" aria-label="锚点">#</a></h2>
+<p>本章提供一份<strong>带完整注释的参考脚本</strong> <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/06-pretrain-mindspeed/pretrain_qwen25_7b_8npu.sh"><code>pretrain_qwen25_7b_8npu.sh</code></a>。它和 MindSpeed-LLM 仓库 <code>examples/</code> 里的官方脚本同构——建议实际训练用官方脚本起步，用本模板来<strong>读懂每个参数</strong>。骨架如下：</p>
+<pre><code class="language-bash">torchrun --nproc_per_node 8 pretrain_gpt.py \
+    ` # —— 并行策略: TP×PP×DP = 2×1×4 —— ` \
+    --tensor-model-parallel-size 2 \
+    --pipeline-model-parallel-size 1 \
+    --sequence-parallel \
+    ` # —— 模型结构: Qwen2.5-7B —— ` \
+    --num-layers 28 --hidden-size 3584 --ffn-hidden-size 18944 \
+    --num-attention-heads 28 --group-query-attention --num-query-groups 4 \
+    --seq-length 4096 --max-position-embeddings 32768 \
+    ` # —— 昇腾融合算子(第 8 章详解, 有条件全开) —— ` \
+    --use-flash-attn --use-fused-rmsnorm --use-fused-swiglu \
+    --use-fused-rotary-pos-emb \
+    ` # —— 显存: 分布式优化器(≈ZeRO-1) + 重计算 —— ` \
+    --use-distributed-optimizer --overlap-grad-reduce \
+    --recompute-granularity full --recompute-method block --recompute-num-layers 2 \
+    --bf16 ...
+</code></pre>
+<p>启动后关键看两类日志（示意）：</p>
+<pre><code class="language-text"> iteration       10/  50000 | consumed samples:       640 | elapsed time per iteration (ms): 13105.3
+ | learning rate: 1.2E-05 | global batch size:    64 | lm loss: 1.10E+01 | ...
+</code></pre>
+<ul>
+<li><code>elapsed time per iteration</code>：单步耗时。吞吐 = <code>global_batch_size × seq_length / 单步耗时</code>，本例 64×4096/13.1s ≈ <strong>20k tokens/s</strong>（8 卡合计，约 2.5k tokens/s/卡）。拿它去第 7 章算 MFU。</li>
+<li><code>lm loss</code>：从 ~11（随机初始化的 ln(vocab) 量级）稳步下降说明在正常学习。</li>
+</ul>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：跑通 50 步不 OOM、loss 下降、8 卡 AICore 利用率都在高位 → 你已经具备预训练的全部工程要素。接下来只是换真数据、加大步数、按第 7/8 章调吞吐。</p>
+</blockquote>
+<h2 id="ch06-s5">6.5 显存不够/想更快时，按顺序动这些旋钮<a class="hlink" href="#ch06-s5" aria-label="锚点">#</a></h2>
+<ol>
+<li><strong>重计算范围</strong>：<code>--recompute-num-layers</code> 越大越省显存越慢。反过来，显存有富余就减小它换速度（MindSpeed 还有自适应重计算/<code>--swap-attention</code> 等进阶特性，见其文档）。</li>
+<li><strong>micro-batch-size</strong>：在显存允许下尽量大；<code>global-batch-size</code> 必须能被 <code>DP × micro-batch-size</code> 整除。</li>
+<li><strong>并行策略升级</strong>：按 6.1 的法则移动 TP/PP。</li>
+<li><strong>通信重叠</strong>：<code>--overlap-grad-reduce</code>、<code>--overlap-param-gather</code>（配合分布式优化器）。</li>
+<li><strong>MC2 通算融合</strong>（910B 专属亮点）：把 TP 里的矩阵乘与通信在算子内并行，开关随 MindSpeed 版本演进（如 <code>--use-ascend-mc2</code>），开 TP 时值得一试。</li>
+</ol>
+<h2 id="ch06-s6">6.6 扩展话题<a class="hlink" href="#ch06-s6" aria-label="锚点">#</a></h2>
+<ul>
+<li><strong>SFT/LoRA/DPO</strong>：MindSpeed-LLM 同样支持（<code>examples/mcore/*/</code> 下有对应脚本）。什么时候放着 LLaMA-Factory 不用而用它？——需要 TP/PP 才装得下的大模型微调、或与预训练共用一套数据/权重体系时。</li>
+<li><strong>多机扩展</strong>：torchrun 加 <code>--nnodes/--node_rank/--master_addr</code> 即可；此外每张 NPU 的 RoCE 网口要用 <code>hccn_tool</code> 配好 IP 并互 ping 通（单机内训练不需要这步）。并行策略原则：<strong>TP 不出机，跨机走 PP/DP</strong>。</li>
+<li><strong>训完的权重回到 HF 生态</strong>：<code>convert_ckpt.py</code> 反向转换（mcore→hf），即可用第 10 章的方式部署。</li>
+</ul>
+<h2 id="ch06-s7">6.7 常见坑<a class="hlink" href="#ch06-s7" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>import 报错/参数不认识</td>
+<td>三仓库版本不配套（6.2 的警告）。严格按 MindSpeed-LLM 分支说明锁 commit</td>
+</tr>
+<tr>
+<td><code>... .bin not found</code></td>
+<td><code>--data-path</code> 要填前缀（不带 <code>_text_document.bin</code> 之后的扩展名部分要保留到 <code>_text_document</code>）</td>
+</tr>
+<tr>
+<td>启动即 OOM</td>
+<td>先把 <code>--recompute-num-layers</code> 拉满（=层数/PP），能跑后再往回收</td>
+</tr>
+<tr>
+<td>global batch 报整除错误</td>
+<td>调整使 <code>GBS % (DP × MBS) == 0</code></td>
+</tr>
+<tr>
+<td>第一步特别慢</td>
+<td>算子编译/缓存预热，正常；持续慢看第 7 章</td>
+</tr>
+<tr>
+<td>保存 checkpoint 巨慢</td>
+<td>存本地 NVMe 而非 NFS；MindSpeed 支持异步保存（<code>--async-save</code>，以版本文档为准）</td>
+</tr>
+<tr>
+<td>loss 不降/发散</td>
+<td>检查 lr 与 warmup（从零预训练常用 1e-4~3e-4 + 较长 warmup；续训要小得多）；数据是否重复/脏</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch06-s8">6.8 练习<a class="hlink" href="#ch06-s8" aria-label="锚点">#</a></h2>
+<ol>
+<li>同一模型分别用 <code>TP1·DP8</code>（重计算拉满）与 <code>TP2·DP4</code> 跑 100 步，对比吞吐——体会「能纯 DP 就纯 DP」。</li>
+<li>把 <code>--seq-length</code> 提到 8192，观察显存与吞吐变化；试着用重计算/TP 把它跑到不 OOM。</li>
+<li>读一遍 MindSpeed-LLM 仓库里你目标模型的官方脚本，对照本章模板逐参数解释——能解释 90% 以上，本章就算通关。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch07">第 7 章 · 性能剖析与 MFU</a>：训练在跑了，现在回答「它跑得够不够快」。</p>
+
+</section>
+<section class="chapter" id="ch07">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">07</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 7 章</div>
+      <h1>性能剖析：知道慢在哪，才谈得上优化</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：建立「测量 → 归因 → 优化 → 复测」的方法论。学会用三层工具看清训练性能：<code>npu-smi</code>（体感）→ 吞吐/MFU（量化总分）→ Ascend PyTorch Profiler（逐算子归因）。第 8 章的每一项优化，都应该由本章的数据来决定做不做、做完有没有效。</p>
+</blockquote>
+<p><strong>前置条件</strong>：手头有一个在跑的训练任务（第 3~6 章任一）。</p>
+<h2 id="ch07-s1">7.1 三层观测法<a class="hlink" href="#ch07-s1" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>工具</th>
+<th>回答的问题</th>
+<th>成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0 体感</td>
+<td><code>npu-smi info</code></td>
+<td>卡忙不忙？显存水位多少？8 卡均衡吗？</td>
+<td>零</td>
+</tr>
+<tr>
+<td>L1 总分</td>
+<td>tokens/s + <strong>MFU</strong>（<a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/07-profiling/mfu.py"><code>mfu.py</code></a>）</td>
+<td>算力发挥了几成？值不值得优化？</td>
+<td>一次计算</td>
+</tr>
+<tr>
+<td>L2 归因</td>
+<td><strong>Ascend PyTorch Profiler</strong>（<a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/07-profiling/profile_tiny_gpt.py"><code>profile_tiny_gpt.py</code></a>）</td>
+<td>时间具体花在哪个算子/哪次通信/哪段空闲？</td>
+<td>采样几步</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch07-s2">7.2 L0：npu-smi 快速体检<a class="hlink" href="#ch07-s2" aria-label="锚点">#</a></h2>
+<p>训练时开着 <code>watch -n 1 npu-smi info</code>，三个信号一眼判断：</p>
+<ul>
+<li><strong>AICore(%) 长期高位（如 &gt;80%）</strong>：计算饱和，瓶颈大概率在算子效率 → 直接看 L2 的算子榜。</li>
+<li><strong>AICore(%) 周期性掉到低位</strong>：有等待——数据加载、通信、或 host 下发慢 → 看 L2 的 Free/通信占比。</li>
+<li><strong>8 张卡忙闲不均</strong>：负载不均衡（数据长短差异大、并行切分不均）或某张卡降频。</li>
+</ul>
+<h2 id="ch07-s3">7.3 L1：吞吐与 MFU——训练性能的「统一考分」<a class="hlink" href="#ch07-s3" aria-label="锚点">#</a></h2>
+<p><strong>MFU（Model FLOPs Utilization）= 模型有效计算量 / (硬件峰值算力 × 时间)</strong>。它把模型大小、batch、卡数都归一化掉，是跨任务、跨机器可比的指标。</p>
+<p>估算公式（GPT 类模型，本课程用 PaLM 论文口径）：</p>
+<pre><code class="language-text">每 token 计算量 ≈ 6N + 12·L·H·S     （N=参数量, L=层数, H=hidden, S=序列长）
+MFU = 每token计算量 × 吞吐(tokens/s) / (卡数 × 单卡峰值FLOPS)
+</code></pre>
+<p>用本章脚本算，只需要从训练日志抄两个数（全局 batch 和单步耗时）：</p>
+<pre><code class="language-bash">python 07-profiling/mfu.py --model-size 7e9 --layers 28 --hidden 3584 \
+    --seq 4096 --global-batch 64 --step-time 13.1 --npus 8 --peak-tflops 320
+</code></pre>
+<pre><code class="language-text">每 token FLOPs: 4.69e+10   (6N=4.20e+10, attn项=4.93e+09)
+吞吐: 20.0k tokens/s (2.5k tokens/s/卡)
+单卡实际算力: 117.4 TFLOPS  (峰值按 320 计)
+MFU: 36.7%
+</code></pre>
+<blockquote class="callout"><p>关于 <code>--peak-tflops</code>：910A 官方 FP16 峰值 320 TFLOPS；<strong>910B 各子型号峰值未统一公开</strong>，社区常用 313~400 TFLOPS 口径估算——把它当「同一台机器上前后对比」的常数即可，别跨口径比较绝对值。</p>
+</blockquote>
+<p><strong>经验参考区间</strong>（规则粗略，仅供定位）：调优到位的稠密模型预训练 MFU 常见 <strong>30%~45%+</strong>；低于 20% 通常说明存在明显瓶颈（数据、通信、AI CPU 算子、并行策略不当），值得进入 L2 深挖；LoRA/短序列微调因计算密度低，MFU 天然偏低，更适合直接比 tokens/s。</p>
+<h2 id="ch07-s4">7.4 L2：Ascend PyTorch Profiler——逐算子归因<a class="hlink" href="#ch07-s4" aria-label="锚点">#</a></h2>
+<p><code>torch_npu.profiler</code> 的用法与原生 <code>torch.profiler</code> 几乎一致，往训练循环里包一层即可（完整可运行示例见 <a href="https://github.com/zky001/hw910_llm_course/blob/claude/huawei-910-training-guide-nefkef/07-profiling/profile_tiny_gpt.py"><code>profile_tiny_gpt.py</code></a>）：</p>
+<pre><code class="language-python">import torch_npu
+
+experimental_config = torch_npu.profiler._ExperimentalConfig(
+    profiler_level=torch_npu.profiler.ProfilerLevel.Level1,   # Level0 更轻, Level2 最细
+    aic_metrics=torch_npu.profiler.AiCMetrics.PipeUtilization,
+)
+with torch_npu.profiler.profile(
+    activities=[torch_npu.profiler.ProfilerActivity.CPU,
+                torch_npu.profiler.ProfilerActivity.NPU],
+    # 只采样中间几步: 跳过编译预热, 控制产物体积
+    schedule=torch_npu.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
+    on_trace_ready=torch_npu.profiler.tensorboard_trace_handler(&quot;./prof&quot;),
+    record_shapes=True, profile_memory=True, with_stack=False,
+    experimental_config=experimental_config,
+) as prof:
+    for step, batch in enumerate(loader):
+        train_step(batch)
+        prof.step()                      # 别忘了, 驱动 schedule 前进
+</code></pre>
+<p>跑完在 <code>./prof/&lt;主机名&gt;_&lt;pid&gt;_ascend_pt/ASCEND_PROFILER_OUTPUT/</code> 下得到一组文件，<strong>最常用的三个</strong>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+<th>怎么用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>trace_view.json</code></td>
+<td>完整时间线（CPU 侧调用 + NPU 算子 + 通信）</td>
+<td>导入 <strong>MindStudio Insight</strong> 图形化查看</td>
+</tr>
+<tr>
+<td><code>step_trace_time.csv</code></td>
+<td>每步的 <strong>Computing / Communication(Not Overlapped) / Free</strong> 分解</td>
+<td>三分天下，先看谁大</td>
+</tr>
+<tr>
+<td><code>kernel_details.csv</code></td>
+<td>每个 NPU kernel 的耗时/形状/类型</td>
+<td>排序找 Top 算子和 <strong>AI_CPU</strong> 算子</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="ch07-s5">归因决策树<a class="hlink" href="#ch07-s5" aria-label="锚点">#</a></h3>
+<pre class="mermaid">flowchart TD
+    A[step_trace_time.csv] --&gt; B{哪一项占比大?}
+    B --&gt;|Free 大| C[NPU 在等:&lt;br&gt;DataLoader 慢 / host 下发慢 / 同步点太多&lt;br&gt;→ 第8章 数据与host优化]
+    B --&gt;|Communication&lt;br&gt;Not Overlapped 大| D[通信没藏住:&lt;br&gt;bucket/overlap 配置、并行策略、慢卡&lt;br&gt;→ 第8章 通信优化]
+    B --&gt;|Computing 大| E[看 kernel_details.csv]
+    E --&gt; F{Top 算子是什么?}
+    F --&gt;|大量小算子/向量算子| G[缺融合:&lt;br&gt;上 FlashAttention/融合算子&lt;br&gt;→ 第8章]
+    F --&gt;|出现 AI_CPU 类型| H[算子回退:&lt;br&gt;改写触发它的代码&lt;br&gt;→ 第8章]
+    F --&gt;|matmul 主导且占比合理| I[计算已充分,&lt;br&gt;调并行/批量, 或接受现状]
+</pre>
+<h3 id="ch07-s6">看结果的两种方式<a class="hlink" href="#ch07-s6" aria-label="锚点">#</a></h3>
+<ol>
+<li><strong>MindStudio Insight</strong>（推荐）：昇腾官方的可视化工具（从昇腾社区下载，装在自己电脑上），打开 <code>*_ascend_pt</code> 目录即可看时间线、算子榜、通信矩阵。找「空洞」（NPU 时间线上的空白段）特别直观。</li>
+<li><strong>直接读 CSV</strong>：服务器上没图形界面时，<code>kernel_details.csv</code> 用 pandas 排个序就是算子榜：</li>
+</ol>
+<pre><code class="language-python">import pandas as pd
+df = pd.read_csv(&quot;kernel_details.csv&quot;)
+print(df.groupby(&quot;Type&quot;)[&quot;Duration(us)&quot;].sum().sort_values(ascending=False).head(15))
+# 若在 Type/Accelerator Core 列看到 AI_CPU —— 恭喜, 找到一个典型优化点(第 8 章 8.4)
+</code></pre>
+<p>另有命令行分析工具 <code>msprof-analyze</code>（<code>pip install msprof-analyze</code>），可以对采集结果自动扫描常见问题（advisor 模式）、做多卡间对比（cluster 模式），集群调优时很好用，入门阶段可选。</p>
+<h2 id="ch07-s7">7.5 profiling 的纪律<a class="hlink" href="#ch07-s7" aria-label="锚点">#</a></h2>
+<ol>
+<li><strong>先预热再采样</strong>：首步含编译/缓存建立，必须用 <code>schedule</code> 跳过，否则结论全错。</li>
+<li><strong>采样窗口要小</strong>：active 3~5 步足够，trace 文件动辄几百 MB。</li>
+<li><strong>多卡时每个 rank 都会产出目录</strong>：一般看 rank0 + 随机抽一个非 0 rank 对比；怀疑负载不均时全看。</li>
+<li><strong>profiling 本身有开销</strong>（Level 越高越大）：定位问题用 Level1，测「真实吞吐」时要关掉 profiler。</li>
+<li><strong>一次只改一个变量</strong>：优化后复测同一工况，diff 两份 <code>step_trace_time.csv</code> 说话。</li>
+</ol>
+<h2 id="ch07-s8">7.6 动手<a class="hlink" href="#ch07-s8" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"># 单卡剖析迷你 GPT（几分钟, 生成 ./prof 目录）
+python 07-profiling/profile_tiny_gpt.py
+
+# 8 卡剖析（观察通信项; 只让 rank0 采样以省空间）
+torchrun --nproc_per_node=8 07-profiling/profile_tiny_gpt.py --distributed
+</code></pre>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：你能对自己的训练任务说出这三个数——<strong>MFU 多少、step 时间三分量各占多少、Top-5 算子是谁</strong>。能说出来，第 8 章每一节该不该做、优先级如何，答案自动浮现。</p>
+</blockquote>
+<h2 id="ch07-s9">7.7 练习<a class="hlink" href="#ch07-s9" aria-label="锚点">#</a></h2>
+<ol>
+<li>给第 3 章的 DDP 训练做 profile，量出通信未重叠时间占比；把模型换大 4 倍再测，观察占比变化。</li>
+<li>故意把 DataLoader <code>num_workers</code> 设为 0 制造数据瓶颈，确认 Free 占比上升，再调回去验证恢复——完成一次完整的「归因-修复-复测」闭环。</li>
+<li>用 <code>mfu.py</code> 算一下第 6 章预训练的 MFU，记下来作为第 8 章优化前的基线。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch08">第 8 章 · 性能优化实战</a>：带着画像去开药。</p>
+
+</section>
+<section class="chapter" id="ch08">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">08</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 8 章</div>
+      <h1>性能优化实战：一份按收益排序的清单</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：把 8 卡 910 的吞吐压榨到位。所有手段按「投入产出比」排序成清单，每项都说明<strong>适用条件、做法、预期收益、怎么验证</strong>。原则只有一条：<strong>第 7 章的剖析数据说了算</strong>——不测量的优化是玄学。</p>
+</blockquote>
+<p><strong>前置条件</strong>：完成第 7 章，手里有自己任务的 MFU 和 step 时间分解。</p>
+<h2 id="ch08-s1">8.0 优化总纲<a class="hlink" href="#ch08-s1" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">① 精度策略(bf16)            —— 一行配置, 基础收益, 先保证做对
+② 融合算子(FlashAttention 等) —— 910B 上单项收益最大的算子级优化
+③ 显存 ↔ 吞吐再平衡          —— 重计算范围/micro-batch 找甜点
+④ 通信优化                   —— 重叠与桶配置, 多卡必做
+⑤ 数据与 Host 侧             —— 让 NPU 永远有活干
+⑥ 并行策略(第 6 章)          —— 上面都做完仍不满意时再动
+</code></pre>
+<p>对号入座：第 7 章分解里 <strong>Computing 大</strong> → 看 ①②③；<strong>Communication 大</strong> → 看 ④；<strong>Free 大</strong> → 看 ⑤。</p>
+<h2 id="ch08-s2">8.1 精度策略：BF16 是基本盘<a class="hlink" href="#ch08-s2" aria-label="锚点">#</a></h2>
+<ul>
+<li><strong>910B：一律 BF16</strong>（<code>bf16: true</code> / <code>--bf16</code> / autocast bf16）。相对 FP32 计算翻倍显存减半；相对 FP16 免 loss scaling、不炸 loss。</li>
+<li><strong>910A：FP16 + 动态 loss scale</strong>（框架默认配好），并把 <code>initial_scale_power</code>、<code>min_loss_scale</code> 留默认；频繁 overflow 跳步说明模型/lr 有问题，去第 9 章。</li>
+<li>别在热路径手写 <code>.float()/.half()</code> 反复转换——autocast 已经把该 FP32 的（norm、softmax、loss）保持 FP32 了，多余转换徒增算子数。</li>
+</ul>
+<p><strong>验证</strong>：显存峰值应明显下降、tokens/s 上升；loss 曲线与 FP32 短跑对比无异常偏移。</p>
+<h2 id="ch08-s3">8.2 融合算子：910B 的最大单项收益<a class="hlink" href="#ch08-s3" aria-label="锚点">#</a></h2>
+<p>一次 attention 的朴素实现要十几个 kernel、还要在显存里物化 S×S 的注意力矩阵；融合算子把它合成一个 kernel、按块计算不物化大矩阵——<strong>又快又省显存，序列越长收益越大</strong>。910 上的对应物：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>融合算子</th>
+<th>替代的朴素实现</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>torch_npu.npu_fusion_attention</code></td>
+<td>softmax(QKᵀ/√d)·V 全套</td>
+<td>即昇腾版 FlashAttention，<strong>仅 910B(Atlas A2)</strong></td>
+</tr>
+<tr>
+<td><code>torch_npu.npu_rms_norm</code></td>
+<td>手写 RMSNorm（4~5 个小算子）</td>
+<td></td>
+</tr>
+<tr>
+<td><code>torch_npu.npu_rotary_mul</code></td>
+<td>手写 RoPE 旋转</td>
+<td></td>
+</tr>
+<tr>
+<td><code>torch_npu.npu_swiglu</code></td>
+<td>SiLU(x₁)·x₂</td>
+<td></td>
+</tr>
+<tr>
+<td><code>torch_npu.optim.NpuFusedAdamW</code></td>
+<td>逐参数小算子的 AdamW</td>
+<td>参数量大时 host 下发开销显著下降</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>先跑基准，眼见为实</strong>（910A 会自动跳过不支持的项）：</p>
+<pre><code class="language-bash">python 08-optimization/fused_ops_bench.py
+</code></pre>
+<p>示例输出（示意）：</p>
+<pre><code class="language-text">attention  B=4 S=4096 H=32 D=128 bf16
+  naive(物化S×S)     : 41.32 ms   peak_mem 9.8 GB
+  npu_fusion_attention:  6.85 ms   peak_mem 2.1 GB   → 6.0x, 显存-79%
+rmsnorm    (4096x4096, hidden=4096)
+  naive : 0.51 ms   fused : 0.11 ms   → 4.6x
+swiglu     ...
+</code></pre>
+<p><strong>实际工程里怎么启用</strong>（多数时候不用自己调 API）：</p>
+<ul>
+<li><strong>MindSpeed/Megatron</strong>：加参数 <code>--use-flash-attn --use-fused-rmsnorm --use-fused-swiglu --use-fused-rotary-pos-emb</code>（第 6 章脚本已带）。</li>
+<li><strong>transformers/LLaMA-Factory</strong>：用 <code>attn_implementation=&quot;sdpa&quot;</code>（本课程脚本默认）。torch_npu 对接了 PyTorch 的 SDPA 入口，新版本上会走融合实现；用第 7 章 profiler 确认 kernel 名里出现 FlashAttention/FusionAttention 字样即为生效。</li>
+<li><strong>自研模型</strong>：手动替换，attention 示例：</li>
+</ul>
+<pre><code class="language-python">import torch_npu
+out = torch_npu.npu_fusion_attention(
+    q, k, v, head_num=n_head, input_layout=&quot;BNSD&quot;,   # q/k/v: (B, N, S, D)
+    atten_mask=causal_mask,                          # bool, True=屏蔽, 上三角
+    scale=1.0 / math.sqrt(head_dim), keep_prob=1.0)[0]
+</code></pre>
+<p><strong>验证</strong>：kernel_details.csv 里 attention 相关小算子（BatchMatMul+SoftmaxV2+…）消失，出现融合大算子；单步时间下降。</p>
+<h2 id="ch08-s4">8.3 显存 ↔ 吞吐再平衡：省出来的显存要花掉<a class="hlink" href="#ch08-s4" aria-label="锚点">#</a></h2>
+<p>显存优化的目的不是「省着」，而是<strong>换成更大的 micro-batch 或更少的重计算</strong>：</p>
+<ol>
+<li><strong>打开 expandable_segments 缓解碎片</strong>（近乎免费）：<pre><code class="language-bash">export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
+</code></pre>
+碎片的典型症状：<code>memory_summary()</code> 里 reserved 远大于 allocated 却报 OOM。</li>
+<li><strong>重计算用「够用就好」</strong>：full 重计算省最多但前向多算一遍（约 +1/3 计算）。Megatron 用 <code>--recompute-num-layers</code> 从大往小收；HF 系的 <code>gradient_checkpointing</code> 是全开/全关，显存富余时可以关掉换速度。</li>
+<li><strong>micro-batch 找甜点</strong>：从 1 往上加、每档记录 tokens/s，<strong>最大能跑的 MBS 不一定最快</strong>（大 MBS 可能触发更差的 kernel 形态或逼近碎片边界），用数据选。</li>
+<li><strong>优化器/ZeRO 档位</strong>：第 5 章的表，够用的最低档 = 通信最少。</li>
+<li>反模式：训练循环里调 <code>torch.npu.empty_cache()</code>——它清掉缓存分配器的池子，之后每次分配都变慢，只应在阶段切换（如训练→评测）时偶尔用。</li>
+</ol>
+<p><strong>验证</strong>：<code>torch.npu.max_memory_allocated()</code> 水位 + tokens/s 一起看，目标是吞吐上升而不是显存数字好看。</p>
+<h2 id="ch08-s5">8.4 抓「回退算子」：AI CPU 与同步点<a class="hlink" href="#ch08-s5" aria-label="锚点">#</a></h2>
+<p>两类隐形杀手，profiler（第 7 章）一抓一个准：</p>
+<p><strong>① AI CPU 算子</strong>：个别算子（<code>nonzero</code>、<code>unique</code>、部分动态 shape/int64 运算）不在 AI Core 执行，慢 1~2 个数量级。kernel_details.csv 的加速器类型列出现 <code>AI_CPU</code> 即中招。处理思路：</p>
+<ul>
+<li>能用 mask 乘法代替 <code>nonzero</code>/<code>masked_select</code> 的就代替（保持静态 shape）；</li>
+<li>索引/位置张量能用 int32 就别用 int64；</li>
+<li>实在绕不开且不在热路径（如每步一次的指标统计），挪到 CPU 上算或降低频率。</li>
+</ul>
+<p><strong>② 隐式同步点</strong>：<code>tensor.item()</code>、<code>print(loss)</code>、<code>tensor.cpu()</code> 都会强迫 host 等待 NPU 排空，打断流水。热路径里的 loss 打印改成每 N 步一次；指标累计用张量在卡上累加，最后一次性 <code>.item()</code>。</p>
+<p><strong>③ Host 下发优化</strong>（torch_npu 专属环境变量，收益视负载而定，建议 A/B 实测）：</p>
+<pre><code class="language-bash">export TASK_QUEUE_ENABLE=2      # 算子下发队列深度优化
+export CPU_AFFINITY_CONF=1      # 进程绑核, 减少 host 侧抖动
+</code></pre>
+<h2 id="ch08-s6">8.5 通信优化：把它藏进计算里<a class="hlink" href="#ch08-s6" aria-label="锚点">#</a></h2>
+<p>通信不可消除，但可以<strong>重叠</strong>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>框架</th>
+<th>开关</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDP</td>
+<td>默认已重叠</td>
+<td>可调 <code>bucket_cap_mb</code>（默认 25）：小模型大 bucket 减少启动次数；<code>gradient_as_bucket_view=True</code> 省显存</td>
+</tr>
+<tr>
+<td>DDP + 梯度累积</td>
+<td><code>model.no_sync()</code></td>
+<td>累积的中间步不通信（Trainer/DeepSpeed 自动处理，手写循环别漏）</td>
+</tr>
+<tr>
+<td>DeepSpeed</td>
+<td><code>overlap_comm: true</code></td>
+<td>本课程配置已开；<code>reduce_bucket_size</code> 是显存/速度权衡旋钮</td>
+</tr>
+<tr>
+<td>Megatron/MindSpeed</td>
+<td><code>--overlap-grad-reduce --overlap-param-gather</code></td>
+<td>配合分布式优化器</td>
+</tr>
+<tr>
+<td>TP 场景</td>
+<td><code>--sequence-parallel</code> 必开；MC2（如 <code>--use-ascend-mc2</code>）</td>
+<td>MC2 把 TP 的 matmul 与通信做算子内融合，910B 亮点特性</td>
+</tr>
+<tr>
+<td>HCCL</td>
+<td><code>HCCL_BUFFSIZE</code>（默认 200MB）</td>
+<td>大消息多机场景可试调大，A/B 实测</td>
+</tr>
+</tbody>
+</table></div>
+<p>还有一个非配置项：<strong>慢卡即通信瓶颈</strong>。集合通信按最慢的卡走，第 1 章 <code>verify_npu.py</code> 发现的降频卡、或负载不均，都表现为「通信时间长」。profiler 的多卡对比（<code>msprof-analyze cluster</code>）能定位。</p>
+<p><strong>验证</strong>：step_trace_time.csv 的 <code>Communication(Not Overlapped)</code> 下降；总步时下降。</p>
+<h2 id="ch08-s7">8.6 数据与 Host 侧：别让 NPU 挨饿<a class="hlink" href="#ch08-s7" aria-label="锚点">#</a></h2>
+<ul>
+<li>DataLoader：<code>num_workers=4~16</code>（按 CPU 核数）、<code>pin_memory=True</code>、<code>persistent_workers=True</code>、搬运用 <code>non_blocking=True</code>。</li>
+<li><strong>离线预处理</strong>：tokenize 别放在训练循环里做——预训练用第 6 章的 bin/idx；SFT 场景 LLaMA-Factory 的 <code>preprocessing_num_workers</code> 提前编码 + 缓存。</li>
+<li><strong>短样本 packing</strong>：SFT 数据长短不齐时，padding 可能浪费一半以上算力。LLaMA-Factory 开 <code>packing: true</code>（把多条短样本拼成满长度序列），等效吞吐可观提升。</li>
+<li>存储：数据集放本地 NVMe；放 NFS 上时首个 epoch 的 Free 占比会出卖它。</li>
+</ul>
+<p><strong>验证</strong>：Free 占比降到个位数百分比；AICore 利用率曲线不再周期性掉底。</p>
+<h2 id="ch08-s8">8.7 8×910 优化清单（贴墙版）<a class="hlink" href="#ch08-s8" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>动作</th>
+<th>条件</th>
+<th>预期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BF16（910A: FP16+scale）</td>
+<td>总是</td>
+<td>基础盘</td>
+</tr>
+<tr>
+<td>2</td>
+<td>FlashAttention/融合算子全开</td>
+<td>910B</td>
+<td>大，序列越长越大</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>expandable_segments:True</code></td>
+<td>总是</td>
+<td>免 OOM/碎片</td>
+</tr>
+<tr>
+<td>4</td>
+<td>重计算收到「刚好不 OOM」</td>
+<td>显存有余量</td>
+<td>最高省回 ~25% 计算</td>
+</tr>
+<tr>
+<td>5</td>
+<td>micro-batch 扫描找甜点</td>
+<td>总是</td>
+<td>中</td>
+</tr>
+<tr>
+<td>6</td>
+<td>通信重叠开关（按框架）</td>
+<td>多卡</td>
+<td>中</td>
+</tr>
+<tr>
+<td>7</td>
+<td>数据离线化 + packing + DataLoader 调参</td>
+<td>Free 占比高</td>
+<td>场景差异大，可达数十 %</td>
+</tr>
+<tr>
+<td>8</td>
+<td>消灭 AI_CPU 算子与热路径 <code>.item()</code></td>
+<td>profiler 发现</td>
+<td>视命中程度</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>TASK_QUEUE_ENABLE=2</code>、绑核</td>
+<td>小算子多/host 忙</td>
+<td>小~中，A/B 定</td>
+</tr>
+<tr>
+<td>10</td>
+<td>并行策略重选（第 6 章法则）</td>
+<td>上述做完仍不满意</td>
+<td>结构性</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout q-ok"><p>✅ <strong>检查点</strong>：每做一项，记录「改动 + tokens/s 前后 + MFU 前后」。清单跑完，稠密模型预训练 MFU 进入 30%+ 区间、微调任务吞吐较裸配置提升 1.5~3 倍是常见结果（具体因模型/序列/芯片而异）。</p>
+</blockquote>
+<h2 id="ch08-s9">8.8 练习<a class="hlink" href="#ch08-s9" aria-label="锚点">#</a></h2>
+<ol>
+<li>用 <code>fused_ops_bench.py</code> 把 S 从 1024 扫到 8192，画出融合注意力加速比随序列长度的曲线，理解「为什么长序列必开 FA」。</li>
+<li>在第 4 章 LoRA 任务上开/关 <code>packing</code>，对比等效 tokens/s。</li>
+<li>把你的任务按 8.7 清单过一遍，产出一张自己的「优化台账」——这就是本章的毕业作品。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch09">第 9 章 · 稳定性与故障排查</a>：快起来之后，还要稳得住。</p>
+
+</section>
+<section class="chapter" id="ch09">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">09</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 9 章</div>
+      <h1>稳定性与故障排查</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：把 8 卡训练中最高频的故障——HCCL 报错、OOM、NaN、卡死、设备占用——变成「见过、知道为什么、知道怎么办」。附一个一键收集诊断信息的脚本，以及长时间训练的断点续训纪律。</p>
+</blockquote>
+<p><strong>前置条件</strong>：无。建议第一次通读，之后当手册查。</p>
+<h2 id="ch09-s1">9.1 排障方法论：两个先问<a class="hlink" href="#ch09-s1" aria-label="锚点">#</a></h2>
+<p><strong>① 先问「哪一层出的事」</strong>，从下往上排，下层不稳上层全是幻觉：</p>
+<pre><code class="language-text">硬件/驱动(npu-smi 正常吗) → 通信(HCCL) → 框架(torch_npu/DeepSpeed/MindSpeed) → 训练动态(loss/数值)
+</code></pre>
+<p><strong>② 多卡报错先问「谁先出的事」</strong>。集合通信的特性是<strong>一人生病全员陪葬</strong>：一个 rank 挂了，其他 7 个只会报「等不到它」的超时错。<strong>满屏 HCCL timeout 里，真凶往往是唯一不报 HCCL 错、或最早打出异常栈的那个 rank。</strong> 排查顺序：</p>
+<pre><code class="language-bash"># torchrun 每个 rank 的输出分开存的话(建议 --log-dir), 按时间戳找最早的异常
+grep -rn &quot;Traceback\|ERROR&quot; logs/ | sort -t: -k2 | head
+
+# 再看昇腾底层日志(见 9.2)里最早的 ERROR
+</code></pre>
+<h2 id="ch09-s2">9.2 日志体系：报错信息不够时去哪挖<a class="hlink" href="#ch09-s2" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>日志</th>
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练框架日志</td>
+<td>你的 stdout/stderr（建议 <code>tee</code> 存盘）</td>
+<td>Python 栈、loss 曲线</td>
+</tr>
+<tr>
+<td><strong>plog（host 侧）</strong></td>
+<td><code>~/ascend/log/plog/plog-*.log</code></td>
+<td>CANN/HCCL/runtime 的详细错误，<strong>HCCL 问题必看</strong></td>
+</tr>
+<tr>
+<td>device 日志</td>
+<td><code>~/ascend/log/</code> 下 device 相关目录</td>
+<td>设备侧异常</td>
+</tr>
+<tr>
+<td>内核日志</td>
+<td><code>dmesg</code></td>
+<td>掉卡、复位等硬件事件</td>
+</tr>
+</tbody>
+</table></div>
+<p>两个常用开关（<strong>排查时才开，平时保持默认</strong>，全量日志又大又拖速度）：</p>
+<pre><code class="language-bash">export ASCEND_GLOBAL_LOG_LEVEL=1        # 0=debug 1=info 2=warning 3=error(默认)
+export ASCEND_SLOG_PRINT_TO_STDOUT=1    # 底层日志直接打到屏幕
+</code></pre>
+<p>另一个专用于定位「到底是哪个算子出错」的开关：</p>
+<pre><code class="language-bash">export ASCEND_LAUNCH_BLOCKING=1   # 同步执行模式: 报错栈会停在真正出错的算子上
+                                  # (异步模式下栈经常指向无辜的下游算子)。很慢, 只在复现问题时开
+</code></pre>
+<h2 id="ch09-s3">9.3 高频故障 Playbook<a class="hlink" href="#ch09-s3" aria-label="锚点">#</a></h2>
+<h3 id="ch09-s4">① 启动阶段 HCCL 建链失败（connect timeout）<a class="hlink" href="#ch09-s4" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：起训即报 <code>HCCL ... connect timeout / get socket timeout</code>，训练没开始。
+<strong>排查顺序</strong>：</p>
+<ol>
+<li>残留进程占卡：<code>npu-smi info</code> 看有无上一次训练的进程 → <code>pkill -9 -f train</code>，等几秒显存释放。</li>
+<li>端口冲突：换 <code>--master_port</code>。</li>
+<li>卡数/进程数不一致：<code>--nproc_per_node</code> 与 <code>ASCEND_RT_VISIBLE_DEVICES</code> 数量对得上吗。</li>
+<li>大任务建链慢属正常：<code>export HCCL_CONNECT_TIMEOUT=600</code>。</li>
+<li>（多机）NPU 网口没配好/防火墙拦了、或需 <code>export HCCL_WHITELIST_DISABLE=1</code>。</li>
+</ol>
+<h3 id="ch09-s5">② 训练中途 HCCL 超时（notify wait / exec timeout）<a class="hlink" href="#ch09-s5" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：跑了几小时后某步集体报 <code>HCCL ... timeout</code>，常见关键词 <code>notify wait</code>。
+<strong>本质</strong>：某集合通信操作等了 <code>HCCL_EXEC_TIMEOUT</code>（默认 1836 秒）还没等齐 8 个 rank。
+<strong>根因 Top4</strong>：</p>
+<ol>
+<li><strong>某 rank 先死了</strong>（OOM/断言失败）→ 按 9.1 找首个异常 rank，修它的问题。</li>
+<li><strong>rank 间执行分支不一致</strong>：如只让 rank0 做 eval/保存，其他 rank 已进入下一步的 AllReduce 空等 → 保证所有 rank 的集合通信序列严格一致（rank0 独占的工作要么放 barrier 保护、要么放通信序列之外）。</li>
+<li><strong>超长的合法停顿</strong>：保存几十 GB checkpoint 到慢存储、超长 eval → 调大 <code>HCCL_EXEC_TIMEOUT</code> 与框架侧 <code>ddp_timeout</code>。</li>
+<li><strong>慢卡/降频</strong>：见 9.3-⑦。</li>
+</ol>
+<h3 id="ch09-s6">③ 显存 OOM<a class="hlink" href="#ch09-s6" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：<code>NPU out of memory. Tried to allocate ...</code>。
+<strong>先分辨真假 OOM</strong>：报错前打印 <code>torch.npu.memory_summary()</code>，若 reserved 远大于 allocated → 是<strong>碎片</strong>，先 <code>export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True</code>。
+<strong>真 OOM 的处理阶梯</strong>（代价从小到大）：</p>
+<ol>
+<li>降 <code>cutoff_len</code>/序列长度、降 micro-batch（用梯度累积补回全局 batch）；</li>
+<li>开梯度检查点 / 调大重计算范围；</li>
+<li>升 ZeRO 档位（2→3）或加 TP（第 5/6 章的显存账算一下该到哪档）；</li>
+<li>offload（速度代价大，最后手段）。
+<strong>训练几小时后才 OOM</strong>：多为碎片累积或 eval/保存的峰值 → expandable_segments + 把 eval batch 降下来。</li>
+</ol>
+<h3 id="ch09-s7">④ Loss NaN / Inf / 突刺<a class="hlink" href="#ch09-s7" aria-label="锚点">#</a></h3>
+<p><strong>910A（FP16）</strong>：</p>
+<ul>
+<li>偶发 overflow + 跳步（日志有 <code>Gradient overflow. Skipping step, loss scaler reducing...</code>）是动态 loss scale 的<strong>正常工作方式</strong>；</li>
+<li>连续跳步/最终 NaN：lr 减半、<code>max_grad_norm</code> 收紧到 0.5、warmup 拉长；还不行检查数据（超长重复、乱码、空样本）。</li>
+</ul>
+<p><strong>910B（BF16）下仍 NaN</strong>，基本不是精度锅，按顺序查：</p>
+<ol>
+<li>lr 过大或 warmup 太短（尤其从零预训练）；</li>
+<li>数据里有毒（脏样本、标签错位）——记下出事 step，把那个 batch 的样本 dump 出来看；</li>
+<li>代码 bug（自定义 loss 里除零/log(0)）；</li>
+<li>需要精确定位算子时：<code>ASCEND_LAUNCH_BLOCKING=1</code> + <code>torch.autograd.set_detect_anomaly(True)</code> 复现（很慢，小数据复现用）。</li>
+</ol>
+<p><strong>要复现实验做对比</strong>时的确定性开关：</p>
+<pre><code class="language-bash">export HCCL_DETERMINISTIC=true          # 通信归约顺序确定
+</code></pre>
+<pre><code class="language-python">torch.use_deterministic_algorithms(True)  # 算子确定性(性能有损, 研究用)
+</code></pre>
+<h3 id="ch09-s8">⑤ 卡死不动（hang，无任何报错）<a class="hlink" href="#ch09-s8" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：日志停住、<code>npu-smi</code> 显示利用率 100% 或 0%，进程都在。
+<strong>取证</strong>：给每个 rank 抓 Python 栈，看大家各自停在哪一行：</p>
+<pre><code class="language-bash">pip install py-spy
+for pid in $(pgrep -f your_train.py); do echo &quot;== $pid ==&quot;; py-spy dump --pid $pid; done
+</code></pre>
+<ul>
+<li>全部停在同一个 collective → 又是「分支不一致/某 rank 慢」（回 ②）；</li>
+<li>有 rank 停在 DataLoader → worker 死锁/共享内存不足（容器 <code>--shm-size</code> 加大、<code>num_workers</code> 降低）；</li>
+<li>停在 save/文件 IO → 存储 hang（NFS 抖动）。</li>
+</ul>
+<h3 id="ch09-s9">⑥ 设备占用 / 僵尸进程<a class="hlink" href="#ch09-s9" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：明明没在训练，<code>npu-smi info</code> 显示显存被占、新任务起不来。</p>
+<pre><code class="language-bash">npu-smi info               # 看每张卡上的进程 PID
+kill -9 &lt;pid&gt;              # 数秒后显存自动回收
+# 进程杀不掉(D 状态)或显存不回收时, 复位单颗芯片(会打断该卡所有任务, 慎用):
+npu-smi set -t reset -i &lt;NPU_ID&gt; -c 0
+# 仍不行 → 重启机器
+</code></pre>
+<h3 id="ch09-s10">⑦ 速度突然变慢 / 时快时慢<a class="hlink" href="#ch09-s10" aria-label="锚点">#</a></h3>
+<p>按嫌疑排序：<strong>温度降频</strong>（<code>npu-smi info</code> 看 Temp/Power，机房空调/风道）→ <strong>别的进程混用了你的卡</strong>（npu-smi 看进程）→ <strong>存储变慢</strong>（数据盘/checkpoint 盘 IO 打满）→ <strong>碎片累积</strong>（expandable_segments）。8 卡任务只要一张卡慢，整体就慢——用第 1 章 <code>verify_npu.py</code> 逐卡复测定位。</p>
+<h2 id="ch09-s11">9.4 长训练的保命纪律：断点续训<a class="hlink" href="#ch09-s11" aria-label="锚点">#</a></h2>
+<p>超过几小时的训练，当作「一定会中断」来设计：</p>
+<ol>
+<li><strong>定期保存</strong>：按步数（如每 500~2000 步）而不是只按 epoch；<code>save_total_limit</code> 控制磁盘。</li>
+<li><strong>原子性</strong>：写临时目录再 rename，避免中断留下半个 checkpoint（Trainer/Megatron 已内置类似机制；自研脚本自己保证）。</li>
+<li><strong>存全套状态</strong>：模型 + optimizer + lr_scheduler + step 数 + RNG 状态（<code>Trainer --resume_from_checkpoint</code>、Megatron <code>--load</code> 都是全套）。</li>
+<li><strong>验证续训正确</strong>：恢复后前几十步的 loss 应与中断前平滑衔接；跳变说明有状态没恢复（常见：数据顺序/采样器状态）。</li>
+<li><strong>保存别拖垮训练</strong>：大 checkpoint 写本地 NVMe 再异步搬运到共享存储；MindSpeed 有异步保存特性可用。</li>
+<li>用 <code>nohup</code>/<code>tmux</code>/调度系统跑，别让 SSH 断连杀掉训练。</li>
+</ol>
+<h2 id="ch09-s12">9.5 一键收集诊断信息<a class="hlink" href="#ch09-s12" aria-label="锚点">#</a></h2>
+<p>找人求助（同事/社区/工单）前，跑这个脚本把现场打包，沟通效率翻倍：</p>
+<pre><code class="language-bash">bash 09-troubleshooting/collect_diag.sh
+# 产物: diag_&lt;时间戳&gt;.tar.gz —— 含版本信息、npu-smi、关键环境变量、最近的 plog 错误、dmesg 摘录
+</code></pre>
+<p>提问模板：<strong>现象一句话 + 最小复现命令 + 首个报错 rank 的完整栈 + diag 包</strong>。</p>
+<h2 id="ch09-s13">9.6 练习<a class="hlink" href="#ch09-s13" aria-label="锚点">#</a></h2>
+<ol>
+<li>主动制造一次 OOM（batch 调大），走一遍 9.3-③ 的阶梯把它救回来。</li>
+<li>在 DDP 训练里给 rank3 加 <code>if rank==3: time.sleep(10000)</code>，体验 ② 的超时现场，练习从日志锁定真凶。</li>
+<li>kill 掉一个正在保存 checkpoint 的训练，验证你的续训流程能无损恢复（9.4-④ 的 loss 衔接检查）。</li>
+</ol>
+<p><strong>下一章</strong> → <a href="#ch10">第 10 章 · 推理部署</a>：把训好的模型用起来。</p>
+
+</section>
+<section class="chapter" id="ch10">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">10</div>
+    <div class="ch-title">
+      <div class="eyebrow">第 10 章</div>
+      <h1>番外：把训好的模型部署成服务</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p><strong>本章目标</strong>：训练闭环的最后一公里——把第 4/5/6 章产出的模型权重，在同一台 8 卡机上跑起推理来：先用 transformers 做正确性验证，再用 <strong>vLLM-Ascend</strong> 起一个 OpenAI 兼容的高吞吐服务；同时了解华为官方推理引擎 <strong>MindIE</strong> 的定位。</p>
+</blockquote>
+<p><strong>前置条件</strong>：手里有一份<strong>完整的 HF 格式权重</strong>——LoRA 需先合并（第 4 章 <code>llamafactory-cli export</code>），ZeRO-3 需已聚合（第 5 章 5.5），Megatron 需已转回 HF（第 6 章 mcore→hf）。</p>
+<h2 id="ch10-s1">10.1 第一步永远是：transformers 冒烟验证<a class="hlink" href="#ch10-s1" aria-label="锚点">#</a></h2>
+<p>部署工具链有任何问题时，先回到最朴素的加载方式，确认<strong>权重本身是好的</strong>：</p>
+<pre><code class="language-python">import torch, torch_npu  # noqa
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+path = &quot;./models/qwen2.5-7b-sft-merged&quot;
+tok = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(
+    path, torch_dtype=torch.bfloat16, trust_remote_code=True).npu().eval()
+
+msgs = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;你是谁?&quot;}]
+inputs = tok.apply_chat_template(msgs, add_generation_prompt=True,
+                                 return_tensors=&quot;pt&quot;).npu()
+out = model.generate(inputs, max_new_tokens=128, do_sample=False)
+print(tok.decode(out[0][inputs.shape[-1]:], skip_special_tokens=True))
+</code></pre>
+<p>回答符合你的微调预期（比如第 4 章训的自定义身份）→ 权重没问题，可以放心排查/使用下面的高性能方案。</p>
+<h2 id="ch10-s2">10.2 vLLM-Ascend：开源生态的标准答案<a class="hlink" href="#ch10-s2" aria-label="锚点">#</a></h2>
+<p><a href="https://github.com/vllm-project/vllm-ascend">vLLM-Ascend</a> 是 vLLM 社区的昇腾后端插件（vLLM 官方多硬件机制下的正式项目），支持 PagedAttention、continuous batching、TP 并行、OpenAI 兼容 API——用法与 CUDA 上的 vLLM 几乎一致。</p>
+<p><strong>安装</strong>：vllm 与 vllm-ascend 版本必须配套，且对 CANN/torch_npu 有版本要求。<strong>推荐直接用官方 Docker 镜像</strong>（一切都配好）；裸机 pip 安装时严格按其 README 的版本组合来：</p>
+<pre><code class="language-bash"># 方式一(推荐): 官方镜像, 见 vllm-ascend README 的 quay.io 镜像地址
+# 方式二: pip(版本号以官方 README 配套表为准)
+pip install vllm==&lt;配套版本&gt; vllm-ascend==&lt;配套版本&gt;
+</code></pre>
+<p><strong>起服务</strong>（示例：用 2 张卡 TP 部署 7B）：</p>
+<pre><code class="language-bash">export ASCEND_RT_VISIBLE_DEVICES=6,7        # 只给推理用 6、7 两张卡
+vllm serve ./models/qwen2.5-7b-sft-merged \
+    --tensor-parallel-size 2 \
+    --max-model-len 8192 \
+    --served-model-name my-qwen
+</code></pre>
+<p><strong>调用</strong>（OpenAI 兼容，任何 openai SDK/客户端可直连）：</p>
+<pre><code class="language-bash">curl http://127.0.0.1:8000/v1/chat/completions -H &quot;Content-Type: application/json&quot; -d '{
+  &quot;model&quot;: &quot;my-qwen&quot;,
+  &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;你是谁?&quot;}]
+}'
+</code></pre>
+<p><strong>规模参考</strong>：bf16 权重占显存 ≈ 参数量×2 字节（7B≈14GB，其余显存给 KV cache，越多并发越高）。7B 单卡 64GB 即可服务；32B 用 TP=2~4；72B 用 TP=8（此时整机全给推理）。</p>
+<h2 id="ch10-s3">10.3 MindIE：华为官方推理引擎<a class="hlink" href="#ch10-s3" aria-label="锚点">#</a></h2>
+<p><strong>MindIE</strong> 是昇腾官方的推理解决方案（含 MindIE-Service 服务化、MindIE-LLM 引擎、ATB 加速库），特点是对昇腾硬件的极致优化和商用支持，量化（如 W8A8）等能力配套完整，但组件封装较深、按官方发布节奏走。选型建议：</p>
+<ul>
+<li><strong>实验/兼容开源生态优先</strong> → vLLM-Ascend（本章主线）；</li>
+<li><strong>生产大规模上线、要官方支持/量化压缩</strong> → 评估 MindIE（从昇腾社区获取，配套 msModelSlim 做量化）。</li>
+</ul>
+<h2 id="ch10-s4">10.4 一台机器同时训练 + 推理<a class="hlink" href="#ch10-s4" aria-label="锚点">#</a></h2>
+<p>8 张卡按需切分是常见用法，用 <code>ASCEND_RT_VISIBLE_DEVICES</code> 硬隔离即可：</p>
+<pre><code class="language-bash"># 终端 A: 6 卡继续训练
+ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5 bash train.sh   # torchrun --nproc_per_node=6
+
+# 终端 B: 2 卡服务化验证最新 checkpoint
+ASCEND_RT_VISIBLE_DEVICES=6,7 vllm serve ...
+</code></pre>
+<p>注意事项：两边都会抢 CPU/内存/磁盘带宽，训练吞吐会略降；正式压测时分开做。</p>
+<h2 id="ch10-s5">10.5 常见坑<a class="hlink" href="#ch10-s5" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vllm 启动报版本/算子错误</td>
+<td>99% 是 vllm ↔ vllm-ascend ↔ CANN/torch_npu 版本不配套，用官方镜像最省心</td>
+</tr>
+<tr>
+<td>加载报缺 config/tokenizer 文件</td>
+<td>权重目录不完整：合并/转换时要把 tokenizer 一起保存（本课程脚本已处理）</td>
+</tr>
+<tr>
+<td>微调效果「消失」</td>
+<td>部署的是 base 权重不是合并后权重；或 chat template 不一致</td>
+</tr>
+<tr>
+<td>显存不够</td>
+<td>降 <code>--max-model-len</code>、<code>--gpu-memory-utilization</code>，或加大 TP</td>
+</tr>
+<tr>
+<td>首 token 延迟高</td>
+<td>服务预热（首次请求触发编译/缓存）；固定形状压测再评估</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ch10-s6">10.6 课程终点 &amp; 下一步<a class="hlink" href="#ch10-s6" aria-label="锚点">#</a></h2>
+<p>到这里，你已经在 8 张 910 上走完了 <strong>环境 → 单卡 → 多卡 → 微调 → 全参 → 预训练 → 剖析 → 优化 → 排障 → 部署</strong> 的完整闭环。接下来值得深入的方向：</p>
+<ul>
+<li><strong>多机扩展</strong>：第 6 章的并行策略 + RoCE 组网（<code>hccn_tool</code> 配 IP）；</li>
+<li><strong>偏好对齐</strong>：DPO/KTO/PPO（LLaMA-Factory 与 MindSpeed-LLM 均支持，流程与第 4/6 章同构）；</li>
+<li><strong>MoE 与长上下文</strong>：MindSpeed 的 EP 专家并行与 CP 上下文并行；</li>
+<li><strong>评测体系</strong>：训完不评等于没训，接入 OpenCompass 等评测框架。</li>
+</ul>
+<p>回到 <a href="#intro">课程总目录</a> · 查阅 <a href="#appendix-b">附录速查表</a></p>
+
+</section>
+<section class="chapter" id="appendix-a">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">A</div>
+    <div class="ch-title">
+      <div class="eyebrow">附录 A</div>
+      <h1>版本配套速查</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p>昇腾环境 90% 的问题是版本不配套。<strong>本页教你「怎么查」，并给出课程写作时的已验证基线</strong>；具体数字会随时间演进，动手装之前务必到官方入口核对一次。</p>
+</blockquote>
+<h2 id="appendix-a-s1">A.1 配套关系总图<a class="hlink" href="#appendix-a-s1" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">驱动/固件 (随整机, 向下兼容较好)
+   ↑ 最低版本要求
+CANN Toolkit + Kernels (按芯片型号: 910A / 910B)
+   ↑ 最低版本要求
+torch_npu  ←——严格一一对应——→  PyTorch
+   ↑
+上层框架 (DeepSpeed / LLaMA-Factory / MindSpeed-LLM / vLLM-Ascend, 各自声明依赖范围)
+</code></pre>
+<p>三条铁律：</p>
+<ol>
+<li><strong>torch ↔ torch_npu 严格对应</strong>：torch_npu 版本号直接沿用 torch 版本号（如 <code>torch 2.5.1</code> ↔ <code>torch-npu 2.5.1.*</code>，后缀 <code>.postN</code>/<code>rc</code> 是昇腾侧的修订号）。装错必炸。</li>
+<li><strong>torch_npu ↔ CANN</strong>：每个 torch_npu 版本声明了配套的 CANN 版本（官方仓库 README 的配套表），CANN 只能 ≥ 要求。</li>
+<li><strong>上层框架各有脾气</strong>：MindSpeed-LLM 对 Megatron commit、MindSpeed commit、torch 版本三者同时锁定（第 6 章）；vLLM-Ascend 对 vllm 版本锁定（第 10 章）。<strong>以各仓库 README 为唯一权威</strong>。</li>
+</ol>
+<h2 id="appendix-a-s2">A.2 官方查询入口（以此为准）<a class="hlink" href="#appendix-a-s2" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>要查什么</th>
+<th>入口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>torch ↔ torch_npu ↔ CANN 配套表</td>
+<td>torch_npu 仓库 README：<a href="https://gitee.com/ascend/pytorch">https://gitee.com/ascend/pytorch</a>（或 github.com/Ascend/pytorch）</td>
+</tr>
+<tr>
+<td>CANN ↔ 驱动配套、下载</td>
+<td>昇腾社区 CANN 页与文档中心：<a href="https://www.hiascend.com/software/cann">https://www.hiascend.com/software/cann</a></td>
+</tr>
+<tr>
+<td>驱动/固件下载</td>
+<td><a href="https://www.hiascend.com/hardware/firmware-drivers">https://www.hiascend.com/hardware/firmware-drivers</a>（按整机/芯片型号选）</td>
+</tr>
+<tr>
+<td>配套关系综合查询</td>
+<td>昇腾社区文档中心的「版本配套说明 / 配套查询工具」</td>
+</tr>
+<tr>
+<td>MindSpeed-LLM 版本三角</td>
+<td>对应分支 README 的「版本配套表」</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-a-s3">A.3 本课程写作基线（2026 上半年，已验证组合的示例）<a class="hlink" href="#appendix-a-s3" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>基线版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>芯片</td>
+<td>910B（Atlas A2）</td>
+<td>910A 需按各章标注降级（fp16、无融合注意力）</td>
+</tr>
+<tr>
+<td>驱动/固件</td>
+<td>整机随附的 24.x 系列</td>
+<td><code>cat /usr/local/Ascend/driver/version.info</code></td>
+</tr>
+<tr>
+<td>CANN</td>
+<td>8.1.RC1（Toolkit + 对应 Kernels）</td>
+<td>8.x 系列均按本课程流程适用</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10</td>
+<td>3.8~3.11 视 torch 版本支持而定</td>
+</tr>
+<tr>
+<td>torch / torch_npu</td>
+<td>2.5.1 / 2.5.1.x</td>
+<td>2.1.0 是长期维护的保守选择；更新版本（2.6/2.7）按配套表</td>
+</tr>
+<tr>
+<td>deepspeed</td>
+<td>0.14~0.16 区间</td>
+<td><code>ds_report</code> 显示 <code>accelerator: npu</code> 即可用</td>
+</tr>
+<tr>
+<td>transformers/peft/accelerate</td>
+<td>跟随 LLaMA-Factory 依赖范围</td>
+<td>避免自行追激进新版本</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout"><p>换任何一格，都回到 A.2 的入口重查一遍整列。</p>
+</blockquote>
+<h2 id="appendix-a-s4">A.4 torch_npu 版本号怎么读<a class="hlink" href="#appendix-a-s4" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">torch-npu == 2.5.1.post1
+             └┬──┘ └───┬─┘
+           对应 torch   昇腾侧修订号(bugfix 递增, 与 torch 无关)
+</code></pre>
+<ul>
+<li>同一 torch 版本下，优先选<strong>最新 post 修订</strong>（都是 bug 修复）。</li>
+<li><code>rc</code> 后缀为候选版本，生产环境避免。</li>
+<li>查当前环境三件套版本的一条命令：</li>
+</ul>
+<pre><code class="language-bash">python -c &quot;import torch,torch_npu;print(torch.__version__, torch_npu.__version__)&quot; \
+  &amp;&amp; cat $ASCEND_TOOLKIT_HOME/version.cfg &amp;&amp; cat /usr/local/Ascend/driver/version.info
+</code></pre>
+<h2 id="appendix-a-s5">A.5 升级顺序建议<a class="hlink" href="#appendix-a-s5" aria-label="锚点">#</a></h2>
+<p>要升级时，<strong>从下往上、一次一层、层层验证</strong>（每层验证方法见第 1 章对应小节）：</p>
+<pre><code class="language-text">驱动(如需) → 重启验证 npu-smi → CANN(Toolkit+Kernels) → 验证 set_env + 冒烟
+→ torch/torch_npu → check_env.sh 全绿 → 上层框架 → 跑通第 3 章 DDP 示例
+</code></pre>
+<p>生产集群升级前，先在一张卡/一台机上做完整验证；训练中途<strong>永远不要</strong>顺手升级任何一层。</p>
+
+</section>
+<section class="chapter" id="appendix-b">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">B</div>
+    <div class="ch-title">
+      <div class="eyebrow">附录 B</div>
+      <h1>命令与环境变量速查表</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p>打印贴在工位上的那一页。按「日常必用 → 排障时用」排序。</p>
+</blockquote>
+<h2 id="appendix-b-s1">B.1 日常命令<a class="hlink" href="#appendix-b-s1" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>目的</th>
+<th>命令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>看卡状态（对标 nvidia-smi）</td>
+<td><code>npu-smi info</code></td>
+</tr>
+<tr>
+<td>持续刷新观察训练</td>
+<td><code>watch -n 1 npu-smi info</code></td>
+</tr>
+<tr>
+<td>单卡健康详情</td>
+<td><code>npu-smi info -t health -i &lt;id&gt;</code></td>
+</tr>
+<tr>
+<td>加载 CANN 环境（每个新 shell）</td>
+<td><code>source /usr/local/Ascend/ascend-toolkit/set_env.sh</code></td>
+</tr>
+<tr>
+<td>查 torch/torch_npu 版本</td>
+<td><code>python -c &quot;import torch,torch_npu;print(torch.__version__,torch_npu.__version__)&quot;</code></td>
+</tr>
+<tr>
+<td>查 CANN 版本</td>
+<td><code>cat $ASCEND_TOOLKIT_HOME/version.cfg</code></td>
+</tr>
+<tr>
+<td>查驱动版本</td>
+<td><code>cat /usr/local/Ascend/driver/version.info</code></td>
+</tr>
+<tr>
+<td>环境体检</td>
+<td><code>bash 01-environment/check_env.sh</code></td>
+</tr>
+<tr>
+<td>8 卡性能验证</td>
+<td><code>python 01-environment/verify_npu.py</code></td>
+</tr>
+<tr>
+<td>8 卡带宽实测</td>
+<td><code>torchrun --nproc_per_node=8 03-multi-card-ddp/allreduce_bench.py</code></td>
+</tr>
+<tr>
+<td>清理残留训练进程</td>
+<td><code>pkill -9 -f &lt;脚本名&gt;</code>，几秒后显存自动释放</td>
+</tr>
+<tr>
+<td>复位单颗芯片（慎用）</td>
+<td><code>npu-smi set -t reset -i &lt;id&gt; -c 0</code></td>
+</tr>
+<tr>
+<td>收集诊断包</td>
+<td><code>bash 09-troubleshooting/collect_diag.sh</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-b-s2">B.2 torchrun 模板<a class="hlink" href="#appendix-b-s2" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"># 单机 8 卡
+torchrun --nproc_per_node=8 --master_port=29500 train.py
+
+# 单机部分卡
+ASCEND_RT_VISIBLE_DEVICES=4,5,6,7 torchrun --nproc_per_node=4 train.py
+
+# 多机(每台机器都执行, node_rank 递增; TP 不出机)
+torchrun --nnodes=2 --node_rank=0 --nproc_per_node=8 \
+         --master_addr=&lt;主节点IP&gt; --master_port=29500 train.py
+</code></pre>
+<h2 id="appendix-b-s3">B.3 环境变量：运行与性能<a class="hlink" href="#appendix-b-s3" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>建议值</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ASCEND_RT_VISIBLE_DEVICES</code></td>
+<td><code>0,1,...,7</code></td>
+<td>进程可见的卡（对标 CUDA_VISIBLE_DEVICES）</td>
+</tr>
+<tr>
+<td><code>PYTORCH_NPU_ALLOC_CONF</code></td>
+<td><code>expandable_segments:True</code></td>
+<td>缓解显存碎片，长训练建议常开</td>
+</tr>
+<tr>
+<td><code>TASK_QUEUE_ENABLE</code></td>
+<td><code>2</code></td>
+<td>host 算子下发优化（A/B 实测）</td>
+</tr>
+<tr>
+<td><code>CPU_AFFINITY_CONF</code></td>
+<td><code>1</code></td>
+<td>进程绑核，减少 host 抖动</td>
+</tr>
+<tr>
+<td><code>HF_ENDPOINT</code></td>
+<td><code>https://hf-mirror.com</code></td>
+<td>HuggingFace 国内镜像</td>
+</tr>
+<tr>
+<td><code>USE_MODELSCOPE_HUB</code></td>
+<td><code>1</code></td>
+<td>LLaMA-Factory 从 ModelScope 拉模型</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-b-s4">B.4 环境变量：HCCL 通信<a class="hlink" href="#appendix-b-s4" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>默认</th>
+<th>何时动它</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HCCL_CONNECT_TIMEOUT</code></td>
+<td>120 秒</td>
+<td>启动建链超时 → 调大到 300~1200</td>
+</tr>
+<tr>
+<td><code>HCCL_EXEC_TIMEOUT</code></td>
+<td>1836 秒</td>
+<td>有超长保存/eval 停顿 → 调大；注意先排除真故障</td>
+</tr>
+<tr>
+<td><code>HCCL_BUFFSIZE</code></td>
+<td>200 (MB)</td>
+<td>大消息/多机调优时 A/B 实测</td>
+</tr>
+<tr>
+<td><code>HCCL_DETERMINISTIC</code></td>
+<td>false</td>
+<td>复现实验设 <code>true</code>（性能略降）</td>
+</tr>
+<tr>
+<td><code>HCCL_WHITELIST_DISABLE</code></td>
+<td>—</td>
+<td>多机部署常设 <code>1</code>（关闭白名单校验）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-b-s5">B.5 环境变量：调试与日志<a class="hlink" href="#appendix-b-s5" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>值</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ASCEND_LAUNCH_BLOCKING</code></td>
+<td><code>1</code></td>
+<td>同步执行，报错栈指向真凶算子。<strong>很慢，只在复现问题时开</strong></td>
+</tr>
+<tr>
+<td><code>ASCEND_GLOBAL_LOG_LEVEL</code></td>
+<td><code>1</code></td>
+<td>底层日志级别 0=debug/1=info/2=warn/3=error(默认)</td>
+</tr>
+<tr>
+<td><code>ASCEND_SLOG_PRINT_TO_STDOUT</code></td>
+<td><code>1</code></td>
+<td>底层日志打到屏幕</td>
+</tr>
+<tr>
+<td>（日志位置）</td>
+<td>—</td>
+<td>host 侧 plog：<code>~/ascend/log/plog/</code>；内核事件：<code>dmesg</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-b-s6">B.6 Python 速查<a class="hlink" href="#appendix-b-s6" aria-label="锚点">#</a></h2>
+<pre><code class="language-python">import torch, torch_npu
+
+torch.npu.set_device(local_rank)            # 绑卡(建张量之前!)
+x = t.to(&quot;npu&quot;, non_blocking=True)          # 上卡
+torch.npu.synchronize()                     # 计时/取数前同步
+torch.npu.max_memory_allocated() / 2**30    # 峰值显存 GB
+print(torch.npu.memory_summary())           # OOM 时看碎片
+torch.npu.manual_seed_all(1234)             # 种子
+
+# 分布式
+dist.init_process_group(backend=&quot;hccl&quot;)
+
+# 混合精度(910B)
+with torch.autocast(device_type=&quot;npu&quot;, dtype=torch.bfloat16): ...
+
+# 混合精度(910A)
+from torch_npu.npu.amp import GradScaler    # + autocast fp16
+
+# 一键迁移存量 CUDA 代码
+from torch_npu.contrib import transfer_to_npu
+
+# 融合算子(910B)
+torch_npu.npu_fusion_attention(...)         # FlashAttention
+torch_npu.npu_rms_norm(x, w, epsilon=1e-6)
+torch_npu.npu_swiglu(x, dim=-1)
+from torch_npu.optim import NpuFusedAdamW
+</code></pre>
+<h2 id="appendix-b-s7">B.7 显存账速算（混合精度 + AdamW）<a class="hlink" href="#appendix-b-s7" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">全参训练模型状态 = 16 字节/参数  (bf16权重2 + bf16梯度2 + fp32主权重4 + 动量4 + 方差4)
+  7B → 112GB   14B → 224GB   32B → 512GB   72B → 1152GB
+ZeRO-1/2/3: 优化器/梯度/参数 依次除以卡数(8)
+LoRA: 底座只算权重 2 字节/参数(7B→14GB), 可训练部分忽略不计
+推理: 权重 2 字节/参数 + KV cache
+910B 单卡 64GB · 910A 单卡 32GB
+</code></pre>
+<h2 id="appendix-b-s8">B.8 课程脚本索引<a class="hlink" href="#appendix-b-s8" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>想做什么</th>
+<th>去哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>体检/验卡</td>
+<td><code>01-environment/</code></td>
+</tr>
+<tr>
+<td>单卡训练模板</td>
+<td><code>02-single-card/train_tiny_gpt.py</code></td>
+</tr>
+<tr>
+<td>DDP 模板 + 带宽测试</td>
+<td><code>03-multi-card-ddp/</code></td>
+</tr>
+<tr>
+<td>LoRA 微调（LLaMA-Factory / HF）</td>
+<td><code>04-lora-finetune/</code></td>
+</tr>
+<tr>
+<td>全参 + DeepSpeed 配置</td>
+<td><code>05-full-finetune-deepspeed/</code></td>
+</tr>
+<tr>
+<td>预训练（MindSpeed）</td>
+<td><code>06-pretrain-mindspeed/</code></td>
+</tr>
+<tr>
+<td>profiler 模板 + MFU 计算</td>
+<td><code>07-profiling/</code></td>
+</tr>
+<tr>
+<td>融合算子基准</td>
+<td><code>08-optimization/fused_ops_bench.py</code></td>
+</tr>
+<tr>
+<td>诊断打包</td>
+<td><code>09-troubleshooting/collect_diag.sh</code></td>
+</tr>
+</tbody>
+</table></div>
+
+</section>
+<section class="chapter" id="appendix-c">
+  <header class="ch-head">
+    <div class="ch-num" aria-hidden="true">C</div>
+    <div class="ch-title">
+      <div class="eyebrow">附录 C</div>
+      <h1>CUDA → NPU 迁移对照表</h1>
+    </div>
+  </header>
+<blockquote class="callout"><p>给带着 NVIDIA 经验来的工程师的「翻译词典」。原则：<strong><code>cuda</code> 换 <code>npu</code>、NCCL 换 HCCL、nvidia-smi 换 npu-smi，其余习惯基本保留。</strong></p>
+</blockquote>
+<h2 id="appendix-c-s1">C.1 概念与工具对照<a class="hlink" href="#appendix-c-s1" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>NVIDIA 世界</th>
+<th>昇腾世界</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CUDA Toolkit + cuDNN</td>
+<td><strong>CANN</strong>（Toolkit + Kernels）</td>
+<td><code>source .../set_env.sh</code> 注入环境</td>
+</tr>
+<tr>
+<td>GPU Driver</td>
+<td>NPU 驱动 + 固件</td>
+<td></td>
+</tr>
+<tr>
+<td>NCCL</td>
+<td><strong>HCCL</strong></td>
+<td><code>init_process_group(&quot;hccl&quot;)</code></td>
+</tr>
+<tr>
+<td>NVLink / NVSwitch</td>
+<td><strong>HCCS</strong> 机内互联</td>
+<td>单机 8 卡高速互联</td>
+</tr>
+<tr>
+<td>InfiniBand</td>
+<td>NPU 自带 RoCE 网口</td>
+<td>多机场景，<code>hccn_tool</code> 配 IP</td>
+</tr>
+<tr>
+<td><code>nvidia-smi</code></td>
+<td><strong><code>npu-smi info</code></strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>CUDA_VISIBLE_DEVICES</code></td>
+<td><strong><code>ASCEND_RT_VISIBLE_DEVICES</code></strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>CUDA_LAUNCH_BLOCKING</code></td>
+<td><code>ASCEND_LAUNCH_BLOCKING</code></td>
+<td>调试同步模式</td>
+</tr>
+<tr>
+<td><code>PYTORCH_CUDA_ALLOC_CONF</code></td>
+<td><code>PYTORCH_NPU_ALLOC_CONF</code></td>
+<td><code>expandable_segments:True</code> 同样适用</td>
+</tr>
+<tr>
+<td>Nsight Systems / nvprof</td>
+<td><strong>Ascend PyTorch Profiler + MindStudio Insight</strong>、msprof</td>
+<td>第 7 章</td>
+</tr>
+<tr>
+<td>nccl-tests</td>
+<td><code>hccl_test</code>（CANN 自带）或本课程 <code>allreduce_bench.py</code></td>
+<td></td>
+</tr>
+<tr>
+<td>FlashAttention 库</td>
+<td><code>torch_npu.npu_fusion_attention</code>（内置）</td>
+<td>仅 910B；无需单独装包</td>
+</tr>
+<tr>
+<td>apex FusedAdam</td>
+<td><code>torch_npu.optim.NpuFusedAdamW</code></td>
+<td></td>
+</tr>
+<tr>
+<td>SM / CUDA Core</td>
+<td>AI Core（+ AI CPU 慢速路径）</td>
+<td>AI_CPU 是性能陷阱，见第 8 章</td>
+</tr>
+<tr>
+<td>Tensor Core 精度 FP16/BF16/TF32</td>
+<td>910A: FP16；910B: FP16/BF16</td>
+<td>无 TF32 概念</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-c-s2">C.2 PyTorch API 对照<a class="hlink" href="#appendix-c-s2" aria-label="锚点">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CUDA</th>
+<th>NPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>import torch</code> 即可</td>
+<td><code>import torch</code> <strong>+ <code>import torch_npu</code></strong></td>
+</tr>
+<tr>
+<td><code>torch.device(&quot;cuda&quot;, i)</code> / <code>&quot;cuda:0&quot;</code></td>
+<td><code>torch.device(&quot;npu&quot;, i)</code> / <code>&quot;npu:0&quot;</code></td>
+</tr>
+<tr>
+<td><code>t.cuda()</code> / <code>t.to(&quot;cuda&quot;)</code></td>
+<td><code>t.npu()</code> / <code>t.to(&quot;npu&quot;)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.is_available()</code></td>
+<td><code>torch.npu.is_available()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.device_count()</code></td>
+<td><code>torch.npu.device_count()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.set_device(i)</code></td>
+<td><code>torch.npu.set_device(i)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.current_device()</code></td>
+<td><code>torch.npu.current_device()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.synchronize()</code></td>
+<td><code>torch.npu.synchronize()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.manual_seed_all(s)</code></td>
+<td><code>torch.npu.manual_seed_all(s)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.empty_cache()</code></td>
+<td><code>torch.npu.empty_cache()</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.memory_allocated/max_memory_allocated/memory_summary</code></td>
+<td><code>torch.npu.</code> 同名</td>
+</tr>
+<tr>
+<td><code>torch.cuda.Stream/Event</code></td>
+<td><code>torch.npu.Stream/Event</code></td>
+</tr>
+<tr>
+<td><code>torch.autocast(&quot;cuda&quot;, dtype=...)</code></td>
+<td><code>torch.autocast(&quot;npu&quot;, dtype=...)</code></td>
+</tr>
+<tr>
+<td><code>torch.cuda.amp.GradScaler()</code></td>
+<td><code>torch_npu.npu.amp.GradScaler()</code></td>
+</tr>
+<tr>
+<td><code>init_process_group(&quot;nccl&quot;)</code></td>
+<td><code>init_process_group(&quot;hccl&quot;)</code></td>
+</tr>
+<tr>
+<td><code>torch.profiler.profile(...)</code></td>
+<td><code>torch_npu.profiler.profile(...)</code>（接口同构，见第 7 章）</td>
+</tr>
+<tr>
+<td><code>F.scaled_dot_product_attention</code></td>
+<td>可用（新版本对接融合实现）；极致性能用 <code>npu_fusion_attention</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>懒人方案</strong>：<code>from torch_npu.contrib import transfer_to_npu</code>——运行时把 cuda 调用自动转 npu，适合快速验证第三方项目；长期代码建议显式改写。</p>
+<h2 id="appendix-c-s3">C.3 迁移一个现有训练项目的检查清单<a class="hlink" href="#appendix-c-s3" aria-label="锚点">#</a></h2>
+<ol>
+<li>☐ 入口加 <code>import torch_npu</code>（或 transfer_to_npu 垫片）。</li>
+<li>☐ 全局搜索 <code>&quot;cuda&quot;</code> 字符串字面量（device 字符串、<code>.cuda()</code>、环境变量判断），逐处替换或走垫片。</li>
+<li>☐ 分布式 backend <code>nccl</code> → <code>hccl</code>；启动脚本 <code>CUDA_VISIBLE_DEVICES</code> → <code>ASCEND_RT_VISIBLE_DEVICES</code>。</li>
+<li>☐ 去掉 CUDA 专属依赖：<code>flash-attn</code>、<code>bitsandbytes</code>、<code>xformers</code>、自定义 CUDA/Triton kernel——找 NPU 等价物（C.1 表）或改回朴素实现，<strong>这些包在 requirements 里装不上/装上不可用是迁移期最常见报错</strong>。</li>
+<li>☐ AMP：910B 上 fp16 方案可直接换 bf16（去掉 GradScaler 更省心）。</li>
+<li>☐ 跑第 1 章体检 + 单卡短训，对齐 loss 曲线与 CUDA 侧（小数据几百步即可）。</li>
+<li>☐ 跑第 7 章 profiler，检查有无 AI_CPU 回退算子，处理之。</li>
+<li>☐ 8 卡拉起，验证吞吐线性度（第 3 章方法）。</li>
+</ol>
+<h2 id="appendix-c-s4">C.4 心态调整（最后一条最重要）<a class="hlink" href="#appendix-c-s4" aria-label="锚点">#</a></h2>
+<ul>
+<li>算子覆盖率很高但不是 100%：遇到不支持/慢的算子，思路是「换写法」而不是「等支持」（第 8 章 8.4）。</li>
+<li>生态版本锁定比 CUDA 世界更严格：<strong>先查配套表再装包</strong>（附录 A）。</li>
+<li>大多数「NPU 的问题」其实是分布式训练的通用问题——你在 CUDA 上积累的经验，90% 直接有效。</li>
+</ul>
+
+</section>
+  <footer class="foot">
+    <p>本手册为社区教程，与华为官方无关；涉及商标归各自所有者。内容基线 2026-08，命令以官方文档为准。</p>
+    <p><a href="https://github.com/zky001/hw910_llm_course" rel="noopener">GitHub: zky001/hw910_llm_course</a> · 构建于 2026-08-14</p>
+  </footer>
+</main>
+</div>
+<script>
+(function(){
+  var doc = document;
+  // ---- 主题切换 ----
+  var themeBtn = doc.getElementById('themeBtn');
+  try {
+    var saved = localStorage.getItem('hw910-theme');
+    if (saved) doc.documentElement.setAttribute('data-theme', saved);
+  } catch(e){}
+  if (themeBtn) themeBtn.addEventListener('click', function(){
+    var cur = doc.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : (cur === 'light' ? 'dark'
+      : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    doc.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('hw910-theme', next); } catch(e){}
+  });
+
+  // ---- 移动端目录 ----
+  var sidebar = doc.getElementById('sidebar');
+  var btn = doc.getElementById('menuBtn');
+  var backdrop = doc.getElementById('backdrop');
+  function closeNav(){ sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+  btn.addEventListener('click', function(){
+    sidebar.classList.toggle('open'); backdrop.classList.toggle('show');
+  });
+  backdrop.addEventListener('click', closeNav);
+  doc.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeNav(); });
+  sidebar.addEventListener('click', function(e){
+    if (e.target.closest('a') && matchMedia('(max-width: 980px)').matches) closeNav();
+  });
+
+  // ---- 代码复制按钮 ----
+  doc.querySelectorAll('pre').forEach(function(pre){
+    if (pre.classList.contains('mermaid')) return;
+    var b = doc.createElement('button');
+    b.className = 'copy-btn'; b.type = 'button'; b.textContent = '复制';
+    b.addEventListener('click', function(){
+      var text = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+      function done(){ b.textContent = '已复制'; setTimeout(function(){ b.textContent = '复制'; }, 1600); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var ta = doc.createElement('textarea'); ta.value = text;
+        doc.body.appendChild(ta); ta.select();
+        try { doc.execCommand('copy'); done(); } catch(e){}
+        doc.body.removeChild(ta);
+      }
+    });
+    pre.appendChild(b);
+  });
+
+  // ---- 滚动高亮当前章节 ----
+  var sections = Array.prototype.slice.call(doc.querySelectorAll('section.chapter'));
+  var items = {};
+  doc.querySelectorAll('.nav-item').forEach(function(it){ items[it.dataset.target] = it; });
+  var ticking = false;
+  function spy(){
+    ticking = false;
+    var y = window.scrollY + 140, current = sections[0];
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].offsetTop <= y) current = sections[i]; else break;
+    }
+    doc.querySelectorAll('.nav-item.active').forEach(function(n){ n.classList.remove('active'); });
+    var it = items[current.id];
+    if (it) {
+      it.classList.add('active');
+      // 只滚动侧栏自身, 绝不触碰窗口滚动位置
+      var top = it.offsetTop, bot = top + it.offsetHeight;
+      if (top < sidebar.scrollTop + 70 || bot > sidebar.scrollTop + sidebar.clientHeight - 50) {
+        sidebar.scrollTop = Math.max(0, top - sidebar.clientHeight * 0.35);
+      }
+    }
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; requestAnimationFrame(spy); }
+  }, { passive: true });
+  spy();
+})();
+</script>
+<script>
+window.addEventListener('load', function () {
+  if (window.mermaid) {
+    var t = document.documentElement.getAttribute('data-theme');
+    var dark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+    window.mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral' });
+    window.mermaid.run();
+  }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+</body>
+</html>

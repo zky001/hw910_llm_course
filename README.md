@@ -4,6 +4,8 @@
 
 这是一套面向工程实践的系列教程。所有章节围绕同一个硬件假设展开：**单台服务器、8 张昇腾 910 NPU**（典型机型为 Atlas 800 训练服务器）。每一章都有明确的产出物：要么是一段跑通的训练，要么是一份能落地的调优/排障手段。
 
+> 📖 **网页版手册**：本课程内置单文件网页版 [`docs/index.html`](docs/index.html)（左侧目录 + 全文检索式阅读，浏览器直接打开即可）。在仓库 Settings → Pages 里选择「Deploy from a branch → 本分支 → `/docs`」，即可发布到 `https://zky001.github.io/hw910_llm_course/`。修改章节内容后执行 `python3 docs/build_site.py` 重新生成。
+
 ## 你将学到什么
 
 - 把驱动、CANN、`torch_npu` 装对，并**验证**每一层都正常（第 1 章）
